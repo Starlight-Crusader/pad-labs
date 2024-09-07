@@ -11,11 +11,29 @@
 
 ### Technology Stack and Communication Patterns
 * Service A: **Express** + **MongoDB**
-* Service B: **Django** + **Dj Channels** (WS) + **Redis** (Channels storage)
+* Service B: **Django** + **PostgreSQL** + **Dj Channels** (WS) + **Redis** (Channels storage)
 * API Gateway: Express
 * Inter-service communication: RESTful APIs
 
 ### Data Management Design
-* Service A endpoints
-  /api/users/auth/signup - creates a new account
-  /
+* Service A endpoints:
+
+      /api/users/auth/signup - creates a new account
+      /api/users/auth/signin - logs into an existing account
+      /api/users/friends/search?uname= - searches users by username
+      /api/users/friends/req/<int:id> - creates a friend request
+      /api/users/friends/get - gets all existing friend requests
+      /api/users/friends/add/<int:id> - accepts a friend request
+      /api/users/ratings/upd?id=&del= - updates user's rating
+
+* Service B endpoints:
+
+      /api/records/save - saves a record of moves
+      /api/records/get-all - gets all the records' id-s and datetime data
+      /api/records/get/<int:id> - get an actuall record by id
+      /api/games/create - creates a new lobby
+      /api/games/discover - gets a list of lobbies to join (filtered by rating)
+      wss://chess.md/api/games/wss/lobby/<int:id>/ - connect to a lobby
+
+### Deployment & Scaling
+Usage of Docker, DCompose, Kubernetes, and stuff
