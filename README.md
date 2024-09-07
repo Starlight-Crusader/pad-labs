@@ -5,7 +5,8 @@
 2. Microservices enable working on independent features or services without stepping on each other’s toes. It becomes possible **to update or deploy individual services** without redeploying the entire application.
 * e.g., *Chess.com* separates its puzzle generator, allowing a dedicated team to work on improving it, deploy new algorithms, or fix bugs without disrupting other critical services like matchmaking or game analysis.
 
-### Service Boundaries (architecture.png)
+### Service Boundaries
+![Architecture](./architecture.png)
 * Service A handles everything regarding the **user data**: authentication, friend system, rating
 * Service B handles everything related to the **games played** on the website: lobbies (including spectators), moves recording
 
