@@ -8,12 +8,12 @@
 ### Service Boundaries
 ![Architecture](./architecture.png)
 * Service A handles everything regarding the **user data**: authentication, friend system, rating
-* Service B handles everything related to the **games played** on the website: lobbies (including spectators), moves recording
+* Service B handles everything related to the **games played** on the website: lobbies (including spectators), moves recording; also requests rating updates and new friend requests from A
 
 ### Technology Stack and Communication Patterns
-* Service A: **Express** + **MongoDB**
-* Service B: **Django** + **PostgreSQL** + **Dj Channels** (WS) + **Redis** (Channels storage)
-* API Gateway: Express
+* Service A (**JS**): **Express** + **MongoDB** (a common combination)
+* Service B (**Python**): **Django** + **PostgreSQL** (a common combination) + **Dj Channels** (WS) + **Redis** (Channels storage)
+* API Gateway (**Go**): **Fiber**
 * Inter-service communication: RESTful APIs
 
 ### Data Management Design
@@ -24,7 +24,7 @@
       /api/users/friends/search?uname= - searches users by username
       /api/users/friends/req/<int:id> - creates a friend request
       /api/users/friends/get - gets all existing friend requests
-      /api/users/friends/add/<int:id> - accepts a friend request
+      /api/users/friends/add?id=&accepted= - resolves a friend request
       /api/users/ratings/upd?id=&del= - updates user's rating
 
 * Service B endpoints:
@@ -34,7 +34,7 @@
       /api/records/get/<int:id> - get an actuall record by id
       /api/games/create - creates a new lobby
       /api/games/discover - gets a list of lobbies to join (filtered by rating)
-      wss://chess.md/api/games/wss/lobby/<int:id>/ - connect to a lobby
+      wss://.../api/games/wss/lobby/<int:id> - lobby consumer (removed on empty)
 
 ### Deployment & Scaling
-Usage of Docker, DCompose, Kubernetes, and stuff
+Usage of Docker, Docker Compose, Kubernetes, and stuff
