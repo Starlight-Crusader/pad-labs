@@ -19,7 +19,7 @@
 - Service A (**JS**): **Express** + **MongoDB** (a common combination)
 - Service B (**Python**): **Django** + **PostgreSQL** (a common combination) + **Dj Channels** (WS) + **Redis** (Channels storage)
 - API Gateway (**Go**): **Fiber**
-- Inter-service communication: RESTful APIs and gRPC
+- Inter-service communication: RESTful APIs (CRUD) and gRPC (service discovery)
 
 ### Data Management Design
 
