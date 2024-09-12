@@ -25,7 +25,7 @@
 
 - Service A endpoints:
 
-1.  /api/users/auth/signup (HTTP POST) - creates a new account
+1.  POST | /api/users/auth/signup - creates a new account
 
         expects:
         {
@@ -35,7 +35,7 @@
 
         on_succ: a confirmation message
 
-2.  /api/users/auth/signin (HTTP POST) - logs into an existing account
+2.  POST | /api/users/auth/signin - logs into an existing account
 
         expects:
         {
@@ -48,7 +48,7 @@
             string auth_token
         }
 
-3.  /api/users/friends/search?uname= (HTTP GET) - searches users by username
+3.  GET | /api/users/friends/search?uname= - searches users by username
 
         expects: auth_token, parameters in URL
 
@@ -60,13 +60,13 @@
             },
         ] - a list of matches
 
-4.  /api/users/friends/req/<int:id> (HTTP POST) - creates a friend request
+4.  POST | /api/users/friends/req/<int:id> - creates a friend request
 
         expects: auth_token, number id (receiver)
 
         on_succ: a confirmation message
 
-5.  /api/users/friends/get (HTTP GET) - gets all existing friend requests
+5.  GET | /api/users/friends/get - gets all existing friend requests
 
         expects: auth_token
 
@@ -78,13 +78,13 @@
             }
         ] - a list of users requesting friendship
 
-6.  /api/users/friends/add?id=&accepted= (HTTP POST) - resolves a friend request
+6.  POST | /api/users/friends/add?id=&accepted= - resolves a friend request
 
         expects: auth_token, parameters in URL
 
         on_succ: a confirmation message
 
-7.  /api/users/ratings/upd?id=&del= (HTTP PATCH) - updates user's rating
+7.  PATCH | /api/users/ratings/upd?id=&del= - updates user's rating
 
         expects: parameters in URL, authorization credentials (inter-service communication: B -> A)
 
@@ -92,7 +92,7 @@
 
 - Service B endpoints:
 
-1.  /api/records/save (HTTP POST) - saves a record of moves
+1.  POST | /api/records/save - saves a record of moves
 
         expects: auth_token,
         {
@@ -101,7 +101,7 @@
 
         on_succ: a confirmation message
 
-2.  /api/records/get-all (HTTP GET - gets all the records' id-s and datetime data
+2.  GET | /api/records/get-all - gets all the records' id-s and datetime data
 
         expects: auth_token
 
@@ -113,7 +113,7 @@
             }
         ] - a list of records
 
-3.  /api/records/get/<int:id> (HTTP GET) - get an actuall record by id
+3.  GET | /api/records/get/<int:id> - get an actuall record by id
 
         expects: auth_token, number id (record's id)
 
@@ -122,7 +122,7 @@
             'moves': list(string)
         }
 
-4.  /api/games/create (HTTP POST) - creates a new lobby
+4.  POST | /api/games/create - creates a new lobby
 
         expects: auth_token
 
@@ -131,7 +131,7 @@
             number lobby_id
         }
 
-5.  /api/games/discover (HTTP GET) - gets a list of lobbies to join (filtered by rating/friends)
+5.  GET | /api/games/discover - gets a list of lobbies to join (filtered by rating/friends)
 
         expects: auth_token
 
@@ -142,7 +142,7 @@
             bool friends_in
         ]
 
-6.  wss://.../api/games/wss/lobby/<int:id> (Django Channels JSONConsumer) - lobby consumer (removed on empty); receives streams of data to be deserialized, interprets it in the specified way
+6.  Django Channels JSONConsumer | wss://.../api/games/wss/lobby/<int:id> - lobby consumer (removed on empty); receives streams of data to be deserialized, interprets it in the specified way
 
 ### Deployment & Scaling
 
