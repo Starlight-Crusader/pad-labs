@@ -16,9 +16,9 @@
 
 ### Technology Stack and Communication Patterns
 
-- Service A (**JS**): **Express** + **MongoDB** (a common combination)
-- Service B (**Python**): **Django** + **PostgreSQL** (a common combination) + **Dj Channels** (WS) + **Redis** (Channels storage)
-- API Gateway (**Go**): **Fiber**
+- Service A (**Python**): **Django** + **MongoDB** (a common combination)
+- Service B (**Python**): **Django** + **MongoDB** (a common combination) + **Dj Channels** (WS) + **Redis** (Channels storage)
+- API Gateway (**JS**): **Express**
 - Inter-service communication: RESTful APIs (CRUD) and gRPC (service discovery)
 
 ### Data Management Design
@@ -146,4 +146,4 @@
 
 ### Deployment & Scaling
 
-Usage of Docker (containerization), Docker Compose (running multi-container applications), Kubernetes (orchestration), and stuff
+Usage of Docker (containerization), Docker Compose (running multi-container applications)
