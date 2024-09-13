@@ -29,8 +29,8 @@
 
         expects:
         {
-            string username,
-            string password
+            'username': string,
+            'password': string
         }
 
         on_succ: a confirmation message
@@ -39,52 +39,52 @@
 
         expects:
         {
-            string username,
-            string password
+            'username': string,
+            'password': string
         }
 
         on_succ:
         {
-            string auth_token
+            'auth_token': string
         }
 
-3.  GET | /api/users/friends/search?uname= - searches users by username
+4.  GET | /api/users/friends/search?uname= - searches users by username
 
         expects: auth_token, parameters in URL
 
         on_succ:
         [
             {
-                number id,
-                string username
+                'id': int-id,
+                'username': string
             },
         ] - a list of matches
 
-4.  POST | /api/users/friends/req/<int:id> - creates a friend request
+5.  POST | /api/users/friends/req/<int:id> - creates a friend request
 
         expects: auth_token, number id (receiver)
 
         on_succ: a confirmation message
 
-5.  GET | /api/users/friends/get - gets all existing friend requests
+6.  GET | /api/users/friends/get - gets all existing friend requests
 
         expects: auth_token
 
         on_succ:
         [
             {
-                number id,
-                string username
+                'id': int-id,
+                'username': string
             }
         ] - a list of users requesting friendship
 
-6.  POST | /api/users/friends/add?id=&accepted= - resolves a friend request
+7.  POST | /api/users/friends/add?id=&accepted= - resolves a friend request
 
         expects: auth_token, parameters in URL
 
         on_succ: a confirmation message
 
-7.  PATCH | /api/users/ratings/upd?id=&del= - updates user's rating
+8.  PATCH | /api/users/ratings/upd?id=&del= - updates user's rating
 
         expects: parameters in URL, authorization credentials (inter-service communication: B -> A)
 
@@ -96,7 +96,7 @@
 
         expects: auth_token,
         {
-            list(string) moves
+            'moves': list(string)
         }
 
         on_succ: a confirmation message
@@ -108,8 +108,8 @@
         on_succ:
         [
             {
-                number id,
-                string datetime (serialized)
+                'id': int-id,
+                'datetime': string-serialized
             }
         ] - a list of records
 
@@ -128,7 +128,7 @@
 
         on_succ:
         {
-            number lobby_id
+            'lobby_id': int-id
         }
 
 5.  GET | /api/games/discover - gets a list of lobbies to join (filtered by rating/friends)
@@ -137,9 +137,9 @@
 
         on_succ:
         [
-            number lobby_id,
-            number avg_rating,
-            bool friends_in
+            'lobby_id': int-id,
+            'avg_rating': int,
+            'friends_in': bool
         ]
 
 6.  Django Channels JSONConsumer | wss://.../api/games/wss/lobby/<int:id> - lobby consumer (removed on empty); receives streams of data to be deserialized, interprets it in the specified way
