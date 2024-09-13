@@ -29,8 +29,8 @@
 
         expects:
         {
-            'username': string,
-            'password': string
+            "username': string,
+            "password': string
         }
 
         on_succ: a confirmation message
@@ -39,13 +39,13 @@
 
         expects:
         {
-            'username': string,
-            'password': string
+            "username': string,
+            "password': string
         }
 
         on_succ:
         {
-            'auth_token': string
+            "auth_token": string
         }
 
 4.  GET | /api/users/friends/search?uname= - searches users by username
@@ -55,8 +55,8 @@
         on_succ:
         [
             {
-                'id': int-id,
-                'username': string
+                "id": int-id,
+                "username": string
             },
         ] - a list of matches
 
@@ -73,8 +73,8 @@
         on_succ:
         [
             {
-                'id': int-id,
-                'username': string
+                "id": int-id,
+                "username": string
             }
         ] - a list of users requesting friendship
 
@@ -96,7 +96,7 @@
 
         expects: auth_token,
         {
-            'moves': list(string)
+            "moves": list(string)
         }
 
         on_succ: a confirmation message
@@ -108,8 +108,8 @@
         on_succ:
         [
             {
-                'id': int-id,
-                'datetime': string-serialized
+                "id": int-id,
+                "datetime": string-serialized
             }
         ] - a list of records
 
@@ -119,7 +119,7 @@
 
         on_succ:
         {
-            'moves': list(string)
+            "moves": list(string)
         }
 
 4.  POST | /api/games/create - creates a new lobby
@@ -128,7 +128,7 @@
 
         on_succ:
         {
-            'lobby_id': int-id
+            "lobby_id": int-id
         }
 
 5.  GET | /api/games/discover - gets a list of lobbies to join (filtered by rating/friends)
@@ -137,9 +137,9 @@
 
         on_succ:
         [
-            'lobby_id': int-id,
-            'avg_rating': int,
-            'friends_in': bool
+            "lobby_id": int-id,
+            "avg_rating": int,
+            "friends_in": bool
         ]
 
 6.  Django Channels JSONConsumer | wss://.../api/games/wss/lobby/<int:id> - lobby consumer (removed on empty); receives streams of data to be deserialized, interprets it in the specified way
