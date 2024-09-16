@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  postges_a:
+    image: postgres:14
+    container_name: postgres_a
+    volumes:
+      - postgres_data_a:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: service_a_db
+      POSTGRES_USER: service_a_user
+      POSTGRES_PASSWORD: service_a_password
+    ports:
+      - "5432:5432"
+
+  # postgres_b:
+  #   image: postgres:14
+  #   container_name: postgres_b
+  #   volumes:
+  #     - postgres_data_b:/var/lib/postgresql/data
+  #   environment:
+  #     POSTGRES_DB: service_b_db
+  #     POSTGRES_USER: service_b_user
+  #     POSTGRES_PASSWORD: service_b_password
+  #   ports:
+  #     - "5433:5432"
+
+  service_a:
+    build:
+      context: ./sA
+    command: ["gunicorn", "--bind", "0.0.0.0:8000", "myapp.wsgi:application"]
+    volumes:
+      - ./sA:/app
+    depends_on:
+      - postgres_a
+    environment:
+      - DJANGO_SETTINGS_MODULE=my_django_project.settings
+      - DATABASE_URL=postgres://service_a_user:service_a_password@db_service_a:5432/service_a_db
+    ports:
+      - "8000:8000"
+
+  # service_b:
+
+volumes:
+  postgres_data_a:
+  # postgres_data_b:
