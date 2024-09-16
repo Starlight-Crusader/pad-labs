@@ -17,8 +17,8 @@
 ### Technology Stack and Communication Patterns
 
 - Service A (**Python**): **Django** + **MongoDB** (a common combination)
-- Service B (**Python**): **Django** + **MongoDB** (a common combination) + **Dj Channels** (WS) + **Redis** (Channels storage)
-- API Gateway (**JS**): **Express**
+- Service B (**Python**): **Django** + **MongoDB** (a common combination) + **Dj Channels** (WS) + **Redis** (optional Channels storage)
+- API Gateway (**JS**): **Express** + **Redis** (SD storage)
 - Inter-service communication: RESTful APIs (CRUD) and gRPC (service discovery)
 
 ### Data Management Design
