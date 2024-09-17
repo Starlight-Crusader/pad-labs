@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  postges_a:
+  postgres_a:
     image: postgres:14
     container_name: postgres_a
     volumes:
@@ -28,13 +28,13 @@ services:
   service_a:
     build:
       context: ./sA
-    command: ["gunicorn", "--bind", "0.0.0.0:8000", "myapp.wsgi:application"]
+    command: ["gunicorn", "--bind", "0.0.0.0:8000", "sA.wsgi:application"]
     volumes:
       - ./sA:/app
     depends_on:
       - postgres_a
     environment:
-      - DJANGO_SETTINGS_MODULE=my_django_project.settings
+      - DJANGO_SETTINGS_MODULE=sA.settings
       - DATABASE_URL=postgres://service_a_user:service_a_password@db_service_a:5432/service_a_db
     ports:
       - "8000:8000"
