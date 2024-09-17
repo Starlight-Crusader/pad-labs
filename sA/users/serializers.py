@@ -6,13 +6,13 @@ from django.contrib.auth.password_validation import validate_password
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'ratings', 'friends']
+        fields = ['id', 'username', 'rating', 'friends']
 
 
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username']
+        fields = ['id', 'username', 'rating']
 
 
 class UserCreateSerializer(serializers.ModelSerializer):

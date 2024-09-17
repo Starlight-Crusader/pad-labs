@@ -21,7 +21,7 @@ class UserDestroyView(generics.DestroyAPIView):
     serializer_class = UserSerializer
 
 
-class UpdateUserRatingView(APIView):
+class UserUpdateRatingView(APIView):
     def patch(self, request, *args, **kwargs):
         user_id = request.query_params.get('id')
         delta = request.query_params.get('delta')
@@ -39,8 +39,8 @@ class UpdateUserRatingView(APIView):
         except ValueError:
             return Response({"error": "'delta' must be an integer!"}, status=status.HTTP_400_BAD_REQUEST)
         
-        user.ratings += delta
+        user.rating += delta
         user.save()
         
-        serializer = UserSerializer(user)
+        serializer = UserListSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)

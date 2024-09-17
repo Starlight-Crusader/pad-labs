@@ -11,16 +11,6 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
-import os
-import dj_database_url
-
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv(
-            'DATABASE_URL',
-        )
-    )
-}
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -51,6 +41,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     # ^ DRF
+    'users',
+    # ^ APPS
 ]
 
 MIDDLEWARE = [
@@ -87,11 +79,20 @@ WSGI_APPLICATION = 'sA.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+import os
+import dj_database_url
+
+TEST_DATABASE_URL = "postgres://test_user:test_pass@localhost:5432/test_db"
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    # 'default': dj_database_url.config(
+    #     default=os.getenv(
+    #         'DATABASE_URL',
+    #     )
+    # ),
+    'default': dj_database_url.config(
+            default=TEST_DATABASE_URL,
+    ),
 }
 
 

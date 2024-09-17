@@ -5,7 +5,7 @@ from django.contrib.auth.models import AbstractBaseUser
 class User(AbstractBaseUser):
     username = models.CharField(max_length=150, unique=True)
     password = models.CharField(max_length=128)
-    ratings = models.IntegerField(default=0)
+    rating = models.IntegerField(default=1200)
 
     friends = models.ManyToManyField('self', blank=True)
 
