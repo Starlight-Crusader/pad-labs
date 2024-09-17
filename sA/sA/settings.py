@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django_filters',
     # ^ DRF
     'users',
+    'friends',
     # ^ APPS
 ]
 
