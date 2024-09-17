@@ -4,6 +4,7 @@ from .serializers import UserCreateSerializer, UserListSerializer, UserSerialize
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+import os
 
 
 class UserCreateView(generics.CreateAPIView):
@@ -19,6 +20,21 @@ class UserListView(generics.ListAPIView):
 class UserDestroyView(generics.DestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    def delete(self, request, *args, **kwargs):
+        # Extract password from headers
+        password = request.headers.get('X-Destroy-Password')
+        
+        # Check if password is provided
+        if not password:
+            return Response({"error": "Authorization credentials are missing."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Verify the password
+        if password != os.getenv('USER_DESTROY_PASSWORD'):
+            return Response({"error": "Authorization credentials are invalid."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Proceed with the destruction of the instance
+        return super().delete(request, *args, **kwargs)
 
 
 class UserUpdateRatingView(APIView):
@@ -44,3 +60,11 @@ class UserUpdateRatingView(APIView):
         
         serializer = UserListSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+class UserSearchView(generics.ListAPIView):
+    serializer_class = UserListSerializer
+
+    def get_queryset(self):
+        username_part = self.request.query_params.get('name', '')
+        return User.objects.filter(username__icontains=username_part)

@@ -28,14 +28,14 @@ services:
   service_a:
     build:
       context: ./sA
-    command: ["gunicorn", "--bind", "0.0.0.0:8000", "sA.wsgi:application"]
+    entrypoint: ["./sA/entrypoint.sh"]
     volumes:
       - ./sA:/app
     depends_on:
       - postgres_a
     environment:
       - DJANGO_SETTINGS_MODULE=sA.settings
-      - DATABASE_URL=postgres://service_a_user:service_a_password@db_service_a:5432/service_a_db
+      - DATABASE_URL=postgres://service_a_user:service_a_password@postgres_a:5432/service_a_db
     ports:
       - "8000:8000"
 

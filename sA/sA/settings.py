@@ -82,16 +82,14 @@ WSGI_APPLICATION = 'sA.wsgi.application'
 import os
 import dj_database_url
 
-TEST_DATABASE_URL = "postgres://test_user:test_pass@localhost:5432/test_db"
-
 DATABASES = {
     # 'default': dj_database_url.config(
     #     default=os.getenv(
-    #         'DATABASE_URL',
+    #         'DATABASE_URL'
     #     )
     # ),
     'default': dj_database_url.config(
-            default=TEST_DATABASE_URL,
+        default=os.getenv('TEST_DATABASE_URL')
     ),
 }
 
