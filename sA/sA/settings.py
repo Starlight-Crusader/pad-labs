@@ -20,7 +20,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-2u-((4yu8d@*ml-%f%r9)7_vb!97(cw$$n+e=ndd4cm*jj@k@j'
+# SECRET_KEY = 'django-insecure-2u-((4yu8d@*ml-%f%r9)7_vb!97(cw$$n+e=ndd4cm*jj@k@j'
+
+import os
+
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -40,9 +44,11 @@ INSTALLED_APPS = [
     # ^ DEFAULT
     'rest_framework',
     'django_filters',
+    'rest_framework_simplejwt',
     # ^ DRF
     'users',
     'friends',
+    'authen',
     # ^ APPS
 ]
 
@@ -80,7 +86,6 @@ WSGI_APPLICATION = 'sA.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-import os
 import dj_database_url
 
 DATABASES = {
@@ -138,3 +143,23 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 AUTH_USER_MODEL = 'users.User'
+
+
+# DRF
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+}

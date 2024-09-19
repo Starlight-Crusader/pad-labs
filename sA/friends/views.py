@@ -1,16 +1,18 @@
 from rest_framework import generics, status, views
 from users.models import User
-from users.serializers import UserListSerializer
+from users.serializers import UserSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import FriendRequest
 from users.models import User
-import os
 from .serializers import FriendRequestListSerializer, ReceivedFriendRequestListSerializer
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from sA.permissions import ProvidesValidRootPassword
 
 
 class UserSearchView(generics.ListAPIView):
-    serializer_class = UserListSerializer
+    serializer_class = UserSerializer
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         username_part = self.request.query_params.get('name', '')
@@ -20,27 +22,15 @@ class UserSearchView(generics.ListAPIView):
 class FriendRequestListView(generics.ListAPIView):
     queryset = FriendRequest.objects.all()
     serializer_class = FriendRequestListSerializer
-
-    def list(self, request, *args, **kwargs):
-        password = request.headers.get('X-Root-Password')
-        
-        # Check if password is provided
-        if not password:
-            return Response({"detail": "Authorization credentials are missing."}, status=status.HTTP_403_FORBIDDEN)
-
-        # Verify the password
-        if password != os.getenv('ROOT_PASSWORD'):
-            return Response({"detail": "Authorization credentials are invalid."}, status=status.HTTP_403_FORBIDDEN)
-
-        # Proceed with listing the users
-        return super().list(request, *args, **kwargs)
+    permission_classes = [ProvidesValidRootPassword]
     
 
 class ReceivedFriendRequestsListView(generics.ListAPIView):
     serializer_class = ReceivedFriendRequestListSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        receiver_id = self.request.query_params.get('receiver_id')
+        receiver_id = self.request.user.id
 
         try:
             user = User.objects.get(id=receiver_id)
@@ -51,16 +41,18 @@ class ReceivedFriendRequestsListView(generics.ListAPIView):
         
         return FriendRequest.objects.filter(receiver=user, status=PENDING)
 
+
 class OpenFriendRequestView(APIView):
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        from_id = request.query_params.get('from')
+        from_id = self.request.user.id
         to_id = request.query_params.get('to')
 
         # Check if both 'from' and 'to' parameters are provided
-        if not from_id or not to_id:
+        if not to_id:
             return Response(
-                {"detail": "Both 'from' and 'to' parameters are required."}, 
+                {"detail": "'to' parameter is required."}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -92,19 +84,9 @@ class OpenFriendRequestView(APIView):
 class FriendRequestDestroyView(generics.DestroyAPIView):
     queryset = FriendRequest.objects.all()
     serializer_class = FriendRequestListView
+    permission_classes = [ProvidesValidRootPassword]
 
     def delete(self, request, *args, **kwargs):
-        password = request.headers.get('X-Root-Password')
-        
-        # Check if password is provided
-        if not password:
-            return Response({"detail": "Authorization credentials are missing."}, status=status.HTTP_403_FORBIDDEN)
-
-        # Verify the password
-        if password != os.getenv('ROOT_PASSWORD'):
-            return Response({"detail": "Authorization credentials are invalid."}, status=status.HTTP_403_FORBIDDEN)
-
-        # Proceed with the destruction of the instance
         super().delete(request, *args, **kwargs)
 
         return Response(
@@ -114,6 +96,8 @@ class FriendRequestDestroyView(generics.DestroyAPIView):
         
 
 class ResolveFriendRequestView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, *args, **kwargs):
         request_id = request.query_params.get('id')
         accepted = request.query_params.get('accepted')
