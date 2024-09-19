@@ -19,3 +19,7 @@ class ProvidesValidRootPassword(BasePermission):
 
         # If the password is valid, grant access
         return True
+
+
+class ValidateTokenWithServiceA(BasePermission):
+    pass
