@@ -8,6 +8,12 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'rating']
 
 
+class BasicUserDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username']
+
+
 class UserListSerializer(serializers.ModelSerializer):
     friends = serializers.SerializerMethodField()
 

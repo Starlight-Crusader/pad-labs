@@ -18,3 +18,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         user.save()
         
         return user
+    
+
+class TokenValidationSerializer(serializers.Serializer):
+    token = serializers.CharField()
