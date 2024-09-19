@@ -23,9 +23,9 @@
 
 ### Data Management Design
 
-- Service A endpoints:
+- Service A endpoints (**DONE**):
 
-1.  POST | /api/users/auth/signup - creates a new account
+1.  POST | /api/authen/signup/ - creates a new account
 
         expects:
         {
@@ -35,7 +35,7 @@
 
         on_succ: a confirmation message
 
-2.  POST | /api/users/auth/signin - logs into an existing account
+2.  POST | /api/authen/signin/ - logs into an existing account
 
         expects:
         {
@@ -45,30 +45,32 @@
 
         on_succ:
         {
-            "auth_token": string
+            "refresh": string,
+            "access": string
         }
 
-4.  GET | /api/users/friends/search?uname= - searches users by username
+4.  GET | /api/friends/search/?uname= - searches users by username
 
-        expects: auth_token, parameters in URL
+        expects: parameters in URL
 
         on_succ:
         [
             {
                 "id": int-id,
-                "username": string
+                "username": string,
+                "rating": int
             },
         ] - a list of matches
 
-5.  POST | /api/users/friends/req/<int:id> - creates a friend request
+5.  POST | /api/friends/requests/open/?to= - creates a friend request
 
-        expects: auth_token, number id (receiver)
+        expects: auth. token, parameters in URL
 
         on_succ: a confirmation message
 
-6.  GET | /api/users/friends/get - gets all existing friend requests
+6.  GET | /api/friends/requests/list/my/ - gets all incoming friend requests
 
-        expects: auth_token
+        expects: auth. token
 
         on_succ:
         [
@@ -78,15 +80,15 @@
             }
         ] - a list of users requesting friendship
 
-7.  POST | /api/users/friends/add?id=&accepted= - resolves a friend request
+7.  POST | /api/friends/requests/resolve/?id=&accepted= - resolves a friend request
 
-        expects: auth_token, parameters in URL
+        expects: auth. token, parameters in URL
 
         on_succ: a confirmation message
 
-8.  PATCH | /api/users/ratings/upd?id=&del= - updates user's rating
+8.  PATCH | /api/users/rating/upd/?id=&delta= - updates user's rating
 
-        expects: parameters in URL, authorization credentials (inter-service communication: B -> A)
+        expects: parameters in URL, inter-service authorization credentials (B -> A)
 
         on_succ: a confirmation message
 
