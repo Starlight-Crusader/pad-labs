@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'users',
     'friends',
     'authen',
+    'utilities',
     # ^ APPS
 ]
 

@@ -1,14 +1,10 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from users.models import User
-from users.serializers import BasicUserDataSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status, generics
 from .serializers import UserCreateSerializer
 from rest_framework.permissions import AllowAny
-from sA.permissions import ProvidesValidRootPassword
-from .serializers import TokenValidationSerializer
-from rest_framework.permissions import IsAuthenticated
 
 
 class SignUpView(generics.CreateAPIView):
@@ -54,14 +50,3 @@ class SignInView(APIView):
             },
             status=status.HTTP_200_OK
         )
-
-
-class ValidateTokenForBView(APIView):
-    permission_classes = [ProvidesValidRootPassword, IsAuthenticated]
-
-    def get(self, request):
-        user_id = request.user.id
-        user = User.objects.get(id=user_id)
-
-        basic_user_info = BasicUserDataSerializer(user).data
-        return Response(basic_user_info, status=status.HTTP_200_OK)

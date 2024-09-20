@@ -131,6 +131,7 @@ env.bak/
 venv.bak/
 env1/
 set_env_vars.bat
+set_env_vars.sh
 
 # Spyder project settings
 .spyderproject

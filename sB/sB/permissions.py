@@ -1,6 +1,7 @@
 from rest_framework.permissions import BasePermission
 from rest_framework.exceptions import PermissionDenied
 import os
+import requests
 
 
 class ProvidesValidRootPassword(BasePermission):
@@ -21,5 +22,20 @@ class ProvidesValidRootPassword(BasePermission):
         return True
 
 
+TEST_SA_URL = "http://localhost:8000/api/utilities/validate-token/"
+
 class ValidateTokenWithServiceA(BasePermission):
-    pass
+    
+    def has_permission(self, request, view):
+        try:
+            response = requests.get(TEST_SA_URL, headers={
+                'Authorization': request.headers.get('Authorization')  # Pass the token
+            })
+            
+            if response.status_code == 200:
+                request.basic_user_info = response.json()
+                return True
+        except requests.RequestException:
+            return False
+        
+        return False
