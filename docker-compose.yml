@@ -13,17 +13,17 @@ services:
     ports:
       - "5432:5432"
 
-  # postgres_b:
-  #   image: postgres:14
-  #   container_name: postgres_b
-  #   volumes:
-  #     - postgres_data_b:/var/lib/postgresql/data
-  #   environment:
-  #     POSTGRES_DB: service_b_db
-  #     POSTGRES_USER: service_b_user
-  #     POSTGRES_PASSWORD: service_b_password
-  #   ports:
-  #     - "5433:5432"
+  postgres_b:
+    image: postgres:14
+    container_name: postgres_b
+    volumes:
+      - postgres_data_b:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: service_b_db
+      POSTGRES_USER: service_b_user
+      POSTGRES_PASSWORD: service_b_password
+    ports:
+      - "5433:5432"
 
   service_a:
     build:
@@ -36,11 +36,25 @@ services:
     environment:
       - DJANGO_SETTINGS_MODULE=sA.settings
       - DATABASE_URL=postgres://service_a_user:service_a_password@postgres_a:5432/service_a_db
+      # Secrets go here
     ports:
       - "8000:8000"
 
-  # service_b:
+  service_b:
+    build:
+      context: ./sA
+    entrypoint: ["./sB/entrypoint.sh"]
+    volumes:
+      - ./sB:/app
+    depends_on:
+      - postgres_b
+    environment:
+      - DJANGO_SETTINGS_MODULE=sB.settings
+      - DATABASE_URL=postgres://service_b_user:service_b_password@postgres_b:5432/service_b_db
+      # Secrets go here
+    ports:
+      - "8001:8000"
 
 volumes:
   postgres_data_a:
-  # postgres_data_b:
+  postgres_data_b:
