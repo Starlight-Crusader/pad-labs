@@ -40,7 +40,10 @@ INSTALLED_APPS = [
     # ^ GENERIC
     'records',
     'utilities',
+    'lobbies',
     # ^ APPS
+    'channels',
+    # ASYNCH STUFF
 ]
 
 MIDDLEWARE = [
@@ -72,6 +75,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'sB.wsgi.application'
+ASGI_APPLICATION = 'sB.asgi.application'
 
 
 # Database

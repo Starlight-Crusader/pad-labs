@@ -22,13 +22,11 @@ class ProvidesValidRootPassword(BasePermission):
         return True
 
 
-TEST_SA_URL = "http://localhost:8000/api/utilities/validate-token/"
-
 class ValidateTokenWithServiceA(BasePermission):
     
     def has_permission(self, request, view):
         try:
-            response = requests.get(TEST_SA_URL, headers={
+            response = requests.get(os.getenv('SERVICE_A_URL'), headers={
                 'Authorization': request.headers.get('Authorization')  # Pass the token
             })
             

@@ -129,9 +129,11 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-env1/
+envA/
+envB/
 set_env_vars.bat
 set_env_vars.sh
+docker-compose.secrets.yml
 
 # Spyder project settings
 .spyderproject
