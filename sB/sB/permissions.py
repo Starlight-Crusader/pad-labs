@@ -26,8 +26,9 @@ class ValidateTokenWithServiceA(BasePermission):
     
     def has_permission(self, request, view):
         try:
-            response = requests.get(os.getenv('SERVICE_A_URL'), headers={
-                'Authorization': request.headers.get('Authorization')  # Pass the token
+            response = requests.get(f'{os.getenv('SERVICE_A_URL')}/api/utilities/validate-token/', headers={
+                'Authorization': request.headers.get('Authorization'),  # Pass the token
+                'X-Root-Password': os.getenv('ROOT_PASSWORD')
             })
             
             if response.status_code == 200:

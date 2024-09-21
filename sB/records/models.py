@@ -3,12 +3,12 @@ from django.contrib.postgres.fields import ArrayField
 
 
 class GameRecord(models.Model):
-    player1 = models.IntegerField()
-    player2 = models.IntegerField()
+    white_player = models.CharField(max_length=150)
+    black_player = models.CharField(max_length=150)
 
     moves = ArrayField(models.CharField(max_length=10))
 
     finished_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Game between player #{self.player1} and player #{self.player2} finished on {self.finished_at}"
+        return f"Game between player #{self.white_player} and player #{self.black_player} finished on {self.finished_at}"

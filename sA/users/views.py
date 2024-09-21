@@ -8,9 +8,14 @@ from sA.permissions import ProvidesValidRootPassword
 
 
 class UserListView(generics.ListAPIView):
-    queryset = User.objects.all()
     serializer_class = UserListSerializer
     permission_classes = [ProvidesValidRootPassword]
+
+    def get_queryset(self):
+        user_id = self.request.query_params.get('id', None)
+        if user_id:
+            return User.objects.filter(id=user_id)
+        return User.objects.all()
 
 
 class UserDestroyView(generics.DestroyAPIView):

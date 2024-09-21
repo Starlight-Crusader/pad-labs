@@ -25,7 +25,7 @@ services:
     ports:
       - "5433:5432"
 
-  service_a:
+  service-a:
     build:
       context: ./sA
     entrypoint: ["./entrypoint.sh"]
@@ -36,12 +36,13 @@ services:
     environment:
       - DJANGO_SETTINGS_MODULE=sA.settings
       - DATABASE_URL=postgres://service_a_user:service_a_password@postgres_a:5432/service_a_db
-      - SERVICE_B_URL=http://service_b:8000
+      - SERVICE_B_URL=http://service-b:8001
+      # - SERVICE_B_URL=http://127.0.0.1:8001
       # Secrets go in docker-compose.secrets.yml
     ports:
       - "8000:8000"
 
-  service_b:
+  service-b:
     build:
       context: ./sB
     entrypoint: ["./entrypoint.sh"]
@@ -52,7 +53,8 @@ services:
     environment:
       - DJANGO_SETTINGS_MODULE=sB.settings
       - DATABASE_URL=postgres://service_b_user:service_b_password@postgres_b:5432/service_b_db
-      - SERVICE_A_URL=http://service_a:8000
+      - SERVICE_A_URL=http://service-a:8000
+      # - SERVICE_A_URL=http://127.0.0.1:8000
       # Secrets go in docker-compose.secrets.yml
     ports:
       - "8001:8000"
