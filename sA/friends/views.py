@@ -104,7 +104,10 @@ class ResolveFriendRequestView(views.APIView):
 
         # Validate request parameters
         if request_id is None or accepted is None:
-            return Response({"detail": "Both 'id' and 'accepted' parameters are required."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Both 'id' and 'accepted' parameters are required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         # Validate accepted parameter
         try:
@@ -116,7 +119,10 @@ class ResolveFriendRequestView(views.APIView):
             # Fetch the friend request object
             friend_request = FriendRequest.objects.get(id=request_id)
         except FriendRequest.DoesNotExist:
-            return Response({"detail": "Friend request not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Friend request not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
         # Update the status of the friend request
         if accepted:

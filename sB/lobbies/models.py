@@ -7,7 +7,7 @@ import string
 class GameLobby(models.Model):
 
     def generate_identifier():
-        return ''.join(random.choices(string.hexdigits, k=8))
+        return ''.join(random.choices(str.lower(string.hexdigits), k=8))
 
     identifier = models.CharField(max_length=8, unique=True, default=generate_identifier)
     
@@ -24,6 +24,8 @@ class GameLobby(models.Model):
         default=list,
         blank=True
     )
+
+    rating = models.IntegerField(blank=True)
 
     def __str__(self):
         return f"Lobby #{self.identifier}: {len(self.players)} players + {len(self.spectators)} spectators"
