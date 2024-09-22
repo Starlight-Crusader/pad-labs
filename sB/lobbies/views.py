@@ -1,10 +1,9 @@
 from rest_framework import generics, status
 from .models import GameLobby
-from .serializers import GameLobbySerializer, CreateGameLobbySerializer
+from .serializers import GameLobbySerializer, CreateGameLobbySerializer, GameLobbyListSerialzer, ConnectToGameLobbySerializer
 from django.db.models import Q
 from rest_framework.response import Response
-from django.core.exceptions import ValidationError
-from django.http import Http404
+from rest_framework.exceptions import ValidationError, NotFound
 from sB.permissions import ProvidesValidRootPassword, ValidateTokenWithServiceA
 import requests
 import os
@@ -23,7 +22,7 @@ class CreateGameLobbyView(generics.CreateAPIView):
 
 
 class DiscoverGamesyLobbiesByRatingView(generics.ListAPIView):
-    serializer_class = GameLobbySerializer
+    serializer_class = GameLobbyListSerialzer
     permission_classes = [ValidateTokenWithServiceA]
 
     def get_queryset(self):
@@ -39,7 +38,7 @@ class DiscoverGamesyLobbiesByRatingView(generics.ListAPIView):
     
 
 class DiscoverGamesyLobbiesWithFriendsView(generics.ListAPIView):
-    serializer_class = GameLobbySerializer
+    serializer_class = GameLobbyListSerialzer
     permission_classes = [ValidateTokenWithServiceA]
 
     def get_queryset(self):
@@ -65,20 +64,19 @@ class DiscoverGamesyLobbiesWithFriendsView(generics.ListAPIView):
 
 class ConnectToGameLobbyView(generics.UpdateAPIView):
     queryset = GameLobby.objects.all()
-    serializer_class = GameLobbySerializer
+    serializer_class = ConnectToGameLobbySerializer
     permission_classes = [ValidateTokenWithServiceA]
 
     def get_object(self):
-        identifier = self.request.query_params.get('identifier')
+        gl_id = self.request.query_params.get('id')
 
-        if not identifier:
-            raise ValidationError({"detail": "The 'identifier' parameter is required."})
+        if not gl_id:
+            raise ValidationError({"detail": "The 'id' parameter is required."})
 
-        # Fetch the lobby by the identifier
         try:
-            return GameLobby.objects.get(identifier=identifier)
+            return GameLobby.objects.get(id=gl_id)
         except GameLobby.DoesNotExist:
-            raise Http404("Lobby not found.")
+            raise NotFound("Lobby not found.")
 
     def update(self, request, *args, **kwargs):
         lobby = self.get_object()

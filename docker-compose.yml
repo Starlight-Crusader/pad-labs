@@ -25,11 +25,11 @@ services:
     ports:
       - "5433:5432"
 
-  # redis:
-  #   image: redis:latest
-  #   container_name: service_metadata
-  #   ports:
-  #     - "6379:6379"
+  channels_redis:
+    image: redis:latest
+    container_name: channels_redis
+    ports:
+      - "6379:6379"
 
   service-a:
     container_name: service-a
@@ -60,6 +60,7 @@ services:
       - ./sB:/app
     depends_on:
       - postgres_b
+      - channels_redis
       # - api-gateway
     environment:
       - DJANGO_SETTINGS_MODULE=sB.settings
@@ -67,6 +68,8 @@ services:
       - A_BASE_URL=http://service-a:8000/
       - API_GATEWAY_BASE_URL=http://api-gateway:8080/
       - VIEW_LEVEL_TIMEOUT_S=2
+      - CHANNELS_REDIS_HOST=channels_redis
+      - CHANNELS_REDIS_PORT=6379
       # Secrets go in docker-compose.secrets.yml
     ports:
       - "8001:8000"

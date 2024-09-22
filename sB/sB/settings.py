@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-jxu7fh1a^6@=&av$7_uc(1_y75=lsc_!v*yc_$as$ey$wefw!n
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['service-b', '127.0.0.1']
+ALLOWED_HOSTS = ['service-b', '127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -37,13 +37,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
+    # ASYNCH STUFF
     # ^ GENERIC
     'records',
     'utilities',
     'lobbies',
     # ^ APPS
-    'channels',
-    # ASYNCH STUFF
 ]
 
 MIDDLEWARE = [
@@ -75,7 +75,19 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'sB.wsgi.application'
+
 ASGI_APPLICATION = 'sB.asgi.application'
+
+import os
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [(os.getenv('CHANNELS_REDIS_HOST'), int(os.getenv('CHANNELS_REDIS_PORT')))],
+        },
+    },
+}
 
 
 # Database

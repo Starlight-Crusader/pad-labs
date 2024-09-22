@@ -1,7 +1,7 @@
 from django.urls import path
-from . import consumers
+from .consumers import LobbyConsumer
 
 
 websocket_urlpatterns = [
-    path('ws/lobbies/', consumers.LobbyConsumer.as_asgi()),
+    path('lobby/<str:lobby_id>', LobbyConsumer.as_asgi()),
 ]
