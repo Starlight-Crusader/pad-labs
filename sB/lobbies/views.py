@@ -45,7 +45,7 @@ class DiscoverGamesyLobbiesWithFriendsView(generics.ListAPIView):
     def get_queryset(self):
         # Retrieve the list of friend IDs from service A
         friends_ids_response = requests.get(
-            f'{os.getenv("SERVICE_A_URL")}/api/friends/get-ids/',
+            f'{os.getenv("A_BASE_URL")}api/friends/get-ids',
             headers={
                 'Authorization': self.request.headers.get('Authorization'),
                 'X-Root-Password': os.getenv('ROOT_PASSWORD')

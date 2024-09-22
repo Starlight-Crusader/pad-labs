@@ -13,6 +13,7 @@ from sA.permissions import ProvidesValidRootPassword
 class UserSearchView(generics.ListAPIView):
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
+    timeout_seconds = 2
 
     def get_queryset(self):
         username_part = self.request.query_params.get('uname', '')

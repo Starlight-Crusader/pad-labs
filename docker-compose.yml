@@ -25,7 +25,14 @@ services:
     ports:
       - "5433:5432"
 
+  # redis:
+  #   image: redis:latest
+  #   container_name: service_metadata
+  #   ports:
+  #     - "6379:6379"
+
   service-a:
+    container_name: service-a
     build:
       context: ./sA
     entrypoint: ["./entrypoint.sh"]
@@ -33,16 +40,19 @@ services:
       - ./sA:/app
     depends_on:
       - postgres_a
+      # - api-gateway
     environment:
       - DJANGO_SETTINGS_MODULE=sA.settings
       - DATABASE_URL=postgres://service_a_user:service_a_password@postgres_a:5432/service_a_db
-      - SERVICE_B_URL=http://service-b:8001
-      # - SERVICE_B_URL=http://127.0.0.1:8001
+      - B_BASE_URL=http://service-a:8001/
+      - API_GATEWAY_BASE_URL=http://api-gateway:8080/
+      - VIEW_LEVEL_TIMEOUT_S=2
       # Secrets go in docker-compose.secrets.yml
     ports:
       - "8000:8000"
 
   service-b:
+    container_name: service-b
     build:
       context: ./sB
     entrypoint: ["./entrypoint.sh"]
@@ -50,14 +60,30 @@ services:
       - ./sB:/app
     depends_on:
       - postgres_b
+      # - api-gateway
     environment:
       - DJANGO_SETTINGS_MODULE=sB.settings
       - DATABASE_URL=postgres://service_b_user:service_b_password@postgres_b:5432/service_b_db
-      - SERVICE_A_URL=http://service-a:8000
-      # - SERVICE_A_URL=http://127.0.0.1:8000
+      - A_BASE_URL=http://service-a:8000/
+      - API_GATEWAY_BASE_URL=http://api-gateway:8080/
+      - VIEW_LEVEL_TIMEOUT_S=2
       # Secrets go in docker-compose.secrets.yml
     ports:
       - "8001:8000"
+
+  # api-gateway:
+  #   build:
+  #     context: ./api-gateway
+  #   volumes:
+  #     - ./api-gateway:/app
+  #   environment:
+  #     - REDIS_HOST=redis
+  #     - REDIS_PORT=6379
+  #     # Secrets go in docker-compose.secrets.yml
+  #   depends_on:
+  #     - redis
+  #   ports:
+  #     - "8080:8080"
 
 volumes:
   postgres_data_a:
