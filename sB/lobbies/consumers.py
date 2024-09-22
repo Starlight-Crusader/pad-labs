@@ -7,11 +7,11 @@ from channels.db import database_sync_to_async
 
 class LobbyConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
-        self.lobby_identifier = self.scope['url_route']['kwargs']['identifier']
+        self.lobby_identifier = self.scope['url_route']['kwargs']['lobby_identifier']
         self.room_group_name = f'lobby_{self.lobby_identifier}'
 
         # Extract the authorization header from the WebSocket request
-        token = self.scope['headers'].get('authorization', [None])[0]
+        token = self.get_token_from_headers(self.scope['headers'])
 
         # Validate the JWT token
         if not await self.validate_token(token):
@@ -107,3 +107,9 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
         except GameLobby.DoesNotExist:
             # Handle case where the lobby does not exist
             pass
+
+    def get_token_from_headers(self, headers):
+        for key, value in headers:
+            if key == b'authorization':
+                return value.decode('utf-8')  # Decode from bytes to string
+        return None

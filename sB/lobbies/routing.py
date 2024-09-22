@@ -3,5 +3,5 @@ from .consumers import LobbyConsumer
 
 
 websocket_urlpatterns = [
-    path('lobby/<str:lobby_id>', LobbyConsumer.as_asgi()),
+    path('lobby/<str:lobby_identifier>', LobbyConsumer.as_asgi()),
 ]
