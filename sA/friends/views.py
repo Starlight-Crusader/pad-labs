@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import FriendRequest
 from users.models import User
-from .serializers import FriendRequestListSerializer, ReceivedFriendRequestListSerializer
+from .serializers import FriendRequestListSerializer, ReceivedFriendRequestListSerializer, FriendsIdsListSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from sA.permissions import ProvidesValidRootPassword
 
@@ -138,3 +138,12 @@ class ResolveFriendRequestView(views.APIView):
         friend_request.save()
 
         return Response({"detail": "Friend request resolved successfully."}, status=status.HTTP_200_OK)
+    
+
+class UserFriendsIdsListView(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = FriendsIdsListSerializer
+    permission_classes = [IsAuthenticated, ProvidesValidRootPassword]
+
+    def get_object(self):
+        return self.request.user

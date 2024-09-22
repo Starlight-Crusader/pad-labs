@@ -5,7 +5,7 @@ from .models import GameLobby
 class GameLobbySerializer(serializers.ModelSerializer):
     class Meta:
         model = GameLobby
-        fields = ['identifier', 'players', 'spectators', 'rating']
+        fields = ['id', 'identifier', 'players', 'spectators', 'rating']
 
 
 class CreateGameLobbySerializer(serializers.ModelSerializer):

@@ -6,6 +6,8 @@ from rest_framework.response import Response
 from django.core.exceptions import ValidationError
 from django.http import Http404
 from sB.permissions import ProvidesValidRootPassword, ValidateTokenWithServiceA
+import requests
+import os
 
 
 class GameLobbyListView(generics.ListAPIView):
@@ -20,7 +22,7 @@ class CreateGameLobbyView(generics.CreateAPIView):
     permission_classes = [ValidateTokenWithServiceA]
 
 
-class DiscoverGameLobbiesView(generics.ListAPIView):
+class DiscoverGamesyLobbiesByRatingView(generics.ListAPIView):
     serializer_class = GameLobbySerializer
     permission_classes = [ValidateTokenWithServiceA]
 
@@ -30,8 +32,34 @@ class DiscoverGameLobbiesView(generics.ListAPIView):
         max_rating = user_rating + 60
 
         return GameLobby.objects.filter(
+            Q(players__len__lt=2),
             rating__gte=min_rating,
             rating__lte=max_rating
+        )[:3]
+    
+
+class DiscoverGamesyLobbiesWithFriendsView(generics.ListAPIView):
+    serializer_class = GameLobbySerializer
+    permission_classes = [ValidateTokenWithServiceA]
+
+    def get_queryset(self):
+        # Retrieve the list of friend IDs from service A
+        friends_ids_response = requests.get(
+            f'{os.getenv("SERVICE_A_URL")}/api/friends/get-ids/',
+            headers={
+                'Authorization': self.request.headers.get('Authorization'),
+                'X-Root-Password': os.getenv('ROOT_PASSWORD')
+            }
+        )
+        
+        if friends_ids_response.status_code == 200:
+            friends_ids = friends_ids_response.json()['friends']
+        else:
+            friends_ids = []
+
+        # Filter lobbies that have friends in either the 'players' or 'spectators' arrays
+        return GameLobby.objects.filter(
+            Q(players__overlap=friends_ids) | Q(spectators__overlap=friends_ids)
         )[:3]
     
 
@@ -43,7 +71,6 @@ class ConnectToGameLobbyView(generics.UpdateAPIView):
     def get_object(self):
         identifier = self.request.query_params.get('identifier')
 
-        # Validate if identifier is provided
         if not identifier:
             raise ValidationError({"detail": "The 'identifier' parameter is required."})
 
