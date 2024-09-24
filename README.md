@@ -9,19 +9,20 @@
 
 ### Service Boundaries
 
-![Architecture](./architecture.png)
+![Architecture](./pad_architecture_new.png)
 
 - Service A handles everything regarding the **user data**: authentication, friend system, rating
 - Service B handles everything related to the **games played** on the website: lobbies (including spectators), moves recording; also requests rating updates and new friend requests from A
 
 ### Technology Stack and Communication Patterns
 
-- Service A (**Python**): **Django** + **MongoDB** (a common combination)
-- Service B (**Python**): **Django** + **MongoDB** (a common combination) + **Dj Channels** (WS) + **Redis** (optional Channels storage)
-- API Gateway (**JS**): **Express** + **Redis** (SD storage)
+- Service A (**Python**): **Django** + **PostgreSQL**
+- Service B (**Python**): **Django** + **PostgreSQL** + **Dj Channels** (WS) + **Redis** (Channel Layers and inter-service cache)
+- API Gateway (Conf. lang. + Lua): **Nginix** + **Redis** (servers metadata src.)
+- Service Discovery (**JS**): **Express** + **Redis** (servers metadata dst.)
 - Inter-service communication: RESTful APIs (CRUD) and gRPC (service discovery)
 
-### Data Management Design
+### Data Management Design (Main Endpoints)
 
 - Service A endpoints (**DONE**):
 
@@ -92,7 +93,7 @@
 
         on_succ: a confirmation message
 
-- Service B endpoints:
+- Service B endpoints (**DONE**):
 
 1.  POST | /api/records/save - saves a record of moves
 
@@ -144,7 +145,7 @@
             "friends_in": bool
         ]
 
-6.  Django Channels JSONConsumer | wss://.../api/games/wss/lobby/<int:id> - lobby consumer (removed on empty); receives streams of data to be deserialized, interprets it in the specified way
+6.  Django Channels AsyncJsonWebsocketConsumer | ws://.../lobby/<string:lobby_identifier> - lobby consumer (removed on empty); receives streams of data to be deserialized, processes it in the specified way
 
 ### Deployment & Scaling
 
