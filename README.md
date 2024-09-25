@@ -16,10 +16,9 @@
 
 ### Technology Stack and Communication Patterns
 
-- Service A (**Python**): **Django** + **PostgreSQL** + **Redis** (caching)
-- Service B (**Python**): **Django** + **PostgreSQL** + **Dj Channels** (WS) + **Redis** (Channel Layers and caching)
-- API Gateway (Conf. lang. + Lua): **Nginix** + **Redis** (servers metadata src.)
-- Service Discovery (**JS**): **Express** + **Redis** (servers metadata dst.)
+- Service A (**Python**): **Django** + **PostgreSQL** + **Redis** (cache)
+- Service B (**Python**): **Django** + **PostgreSQL** + **Dj Channels** (WS) + **Redis** (Channel Layers and cache)
+- API Gateway (**JS**): **Express** + **Redis** (servers metadata)
 - Inter-service communication: RESTful APIs (CRUD) and gRPC (service discovery)
 
 ### Data Management Design (Main Endpoints)
@@ -50,7 +49,7 @@
             "access": string
         }
 
-4.  GET | /api/friends/search/?uname= - searches users by username
+3.  GET | /api/friends/search/?uname= - searches users by username
 
         expects: parameters in URL
 
@@ -63,13 +62,13 @@
             },
         ] - a list of matches
 
-5.  POST | /api/friends/requests/open/?to= - creates a friend request
+4.  POST | /api/friends/requests/open/?to= - creates a friend request
 
         expects: auth. token, parameters in URL
 
         on_succ: a confirmation message
 
-6.  GET | /api/friends/requests/list/my/ - gets all incoming friend requests
+5.  GET | /api/friends/requests/list/my/ - gets all incoming friend requests
 
         expects: auth. token
 
@@ -81,13 +80,13 @@
             }
         ] - a list of users requesting friendship
 
-7.  POST | /api/friends/requests/resolve/?id=&accepted= - resolves a friend request
+6.  POST | /api/friends/requests/resolve/?id=&accepted= - resolves a friend request
 
         expects: auth. token, parameters in URL
 
         on_succ: a confirmation message
 
-8.  PATCH | /api/users/rating/upd/?id=&delta= - updates user's rating
+7.  PATCH | /api/users/rating/upd/?id=&delta= - updates user's rating
 
         expects: parameters in URL, inter-service authorization credentials (B -> A)
 
