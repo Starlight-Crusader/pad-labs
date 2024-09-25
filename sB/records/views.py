@@ -9,6 +9,11 @@ class GameRecordListView(generics.ListAPIView):
     serializer_class = GameRecordSerializer
     
     def get_queryset(self):
+        record_id = self.request.query_params.get('id', None)
+
+        if record_id:
+            return GameRecord.objects.filter(id=record_id)
+
         username = self.request.query_params.get('uname', None)
 
         if username:

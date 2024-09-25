@@ -9,6 +9,6 @@ class StatusView(APIView):
 
     def get(self, request):
         return Response(
-            {'message': f"Instance of service B running on {request.get_host()} is fine!"},
+            {'message': f"Instance of service B running on {request.get_host()} is alive!"},
             status=status.HTTP_202_ACCEPTED
         )
