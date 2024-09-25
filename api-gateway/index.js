@@ -29,6 +29,9 @@ app.use(limiter);
 // Timeout middleware (5 seconds)
 app.use(timeout('5s'));
 
+// Parse incoming JSON payloads
+app.use(express.json());
+
 // Status endpoint
 app.get('/ping', haltOnTimedout, (req, res) => {
     res.status(200).json({ message: 'API Gateway running on 8080 is alive!' });

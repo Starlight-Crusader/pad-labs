@@ -5,7 +5,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status, generics
 from .serializers import UserCreateSerializer
 from rest_framework.permissions import AllowAny
-import time
 
 
 class SignUpView(generics.CreateAPIView):
