@@ -12,6 +12,7 @@ h11==0.14.0
 idna==3.10
 msgpack==1.1.0
 psycopg2-binary==2.9.9
+PyJWT==2.9.0
 redis==5.0.8
 requests==2.32.3
 sqlparse==0.5.1

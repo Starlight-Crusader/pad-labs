@@ -7,6 +7,8 @@ from rest_framework.exceptions import ValidationError, NotFound
 from sB.permissions import ProvidesValidRootPassword, ValidateTokenWithServiceA
 import requests
 import os
+from django.core.cache import cache
+from sB.utilities import get_timeout_from_token
 
 
 class GameLobbyListView(generics.ListAPIView):
@@ -42,19 +44,33 @@ class DiscoverGamesyLobbiesWithFriendsView(generics.ListAPIView):
     permission_classes = [ValidateTokenWithServiceA]
 
     def get_queryset(self):
-        # Retrieve the list of friend IDs from service A
-        friends_ids_response = requests.get(
-            f'{os.getenv("A_BASE_URL")}api/friends/get-ids',
-            headers={
-                'Authorization': self.request.headers.get('Authorization'),
-                'X-Root-Password': os.getenv('ROOT_PASSWORD')
-            }
-        )
-        
-        if friends_ids_response.status_code == 200:
-            friends_ids = friends_ids_response.json()['friends']
+        token = self.request.headers.get('Authorization')
+
+        cached_friends_ids = cache.get(token + "_friends_ids")
+        if cached_friends_ids is not None:
+            print("Using cached friends IDs")
+            friends_ids = cached_friends_ids
         else:
-            friends_ids = []
+            # Retrieve the list of friend IDs from service A
+            friends_ids_response = requests.get(
+                f'{os.getenv("A_BASE_URL")}api/friends/get-ids',
+                headers={
+                    'Authorization': token,
+                    'X-Root-Password': os.getenv('ROOT_PASSWORD')
+                }
+            )
+            
+            if friends_ids_response.status_code == 200:
+                friends_ids = friends_ids_response.json().get('friends', [])
+                
+                # Cache the friend IDs with the appropriate timeout
+                timeout = get_timeout_from_token(token)  # Use the timeout function
+                if timeout is not None:
+                    cache.set(token + "_friends_ids", friends_ids, timeout=timeout)
+                    print("Cached friends IDs")
+
+            else:
+                friends_ids = []
 
         # Filter lobbies that have friends in either the 'players' or 'spectators' arrays
         return GameLobby.objects.filter(

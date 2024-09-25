@@ -16,8 +16,8 @@
 
 ### Technology Stack and Communication Patterns
 
-- Service A (**Python**): **Django** + **PostgreSQL** + **Redis** (cache)
-- Service B (**Python**): **Django** + **PostgreSQL** + **Dj Channels** (WS) + **Redis** (Channel Layers and cache)
+- Service A (**Python**): **Django** + **PostgreSQL**
+- Service B (**Python**): **Django** + **PostgreSQL** + **Dj Channels** (WS) + **Redis** (Channel Layers) + * Native Django cache
 - API Gateway (**JS**): **Express** + **Redis** (servers metadata)
 - Inter-service communication: RESTful APIs (CRUD) and gRPC (service discovery)
 
