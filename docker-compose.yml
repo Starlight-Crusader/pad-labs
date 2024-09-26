@@ -25,6 +25,13 @@ services:
     ports:
       - "5433:5432"
 
+  service_redis:
+    image: redis:latest
+    container_name: service_redis
+    ports:
+      - "6379:6379"
+    command: redis-server --save "" --appendonly no
+
   service-a:
     container_name: service-a
     build:
@@ -34,24 +41,16 @@ services:
       - ./sA:/app
     depends_on:
       - postgres_a
-      - service_redis
       - api-gateway
     environment:
       - DJANGO_SETTINGS_MODULE=sA.settings
       - DATABASE_URL=postgres://service_a_user:service_a_password@postgres_a:5432/service_a_db
       - API_GATEWAY_BASE_URL=http://api-gateway:8080/
-      - VIEW_LEVEL_TIMEOUT_S=2
-      - CACHE_REDIS_HOST=service_redis
-      - CACHE_REDIS_PORT=6379
-      # Secrets go in docker-compose.secrets.yml
+      - SERVICE_TYPE=A
+      - SD_HOST=api-gateway
+      - SD_PORT=50051
     ports:
       - "8000:8000"
-
-  service_redis:
-    image: redis:latest
-    container_name: service_redis
-    ports:
-      - "6379:6379"
 
   service-b:
     container_name: service-b
@@ -62,33 +61,40 @@ services:
       - ./sB:/app
     depends_on:
       - postgres_b
-      - service-a
-      - service_redis
       - api-gateway
+      - service_redis
     environment:
       - DJANGO_SETTINGS_MODULE=sB.settings
       - DATABASE_URL=postgres://service_b_user:service_b_password@postgres_b:5432/service_b_db
-      - A_BASE_URL=http://service-a:8000/
       - API_GATEWAY_BASE_URL=http://api-gateway:8080/
-      - VIEW_LEVEL_TIMEOUT_S=2
       - CHANNELS_REDIS_HOST=service_redis
       - CHANNELS_REDIS_PORT=6379
-      - CACHE_REDIS_HOST=service_redis
-      - CACHE_REDIS_PORT=6379
-      # Secrets go in docker-compose.secrets.yml
+      - SERVICE_TYPE=B
+      - SD_HOST=api-gateway
+      - SD_PORT=50051
     ports:
       - "8001:8000"
+
+  sm_redis:
+    image: redis:latest
+    container_name: sm_redis
+    ports:
+      - "6380:6379"
+    command: redis-server --save "" --appendonly no
 
   api-gateway:
     container_name: api-gateway
     build:
       context: ./api-gateway
     environment:
-      - A_BASE_URL=http://service-a:8000/
-      - B_BASE_URL=http://service-b:8000/
-      - PORT=8080
+      - REST_PORT=8080
+      - GRPC_PORT=50051
+      - SM_REDIS_URL=redis://sm_redis:6379
+      - SERV_REST_PORT=8000
     ports:
       - "8080:8080"
+    depends_on:
+      - sm_redis
 
 volumes:
   postgres_data_a:

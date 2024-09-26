@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package discovery;
+
+service ServiceDiscovery {
+    rpc Register (RegisterRequest) returns (RegisterResponse);
+}
+
+message RegisterRequest {
+    string serviceType = 1;
+    string ip = 2;
+}
+
+message RegisterResponse {
+    bool success = 1;
+    string message = 2;
+}
