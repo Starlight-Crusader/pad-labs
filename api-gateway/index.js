@@ -12,19 +12,25 @@ const SERVICE_A_URL = process.env.A_BASE_URL;
 const SERVICE_B_URL = process.env.B_BASE_URL;
 
 // Middleware for concurrent task limits
-const limiter = rateLimit({
-    windowMs: 60 * 1000, // 1 minute
-    max: 100, // Limit each IP to 100 requests per windowMs
-    message: 'Too many requests from this IP, please try again after a minute.'
-});
+let activeRequests = 0;
+const MAX_CONCURRENT_REQUESTS = 10;
+
+const concurrentLimitMiddleware = (req, res, next) => {
+    if (activeRequests >= MAX_CONCURRENT_REQUESTS) {
+        res.status(503).json({ detail: 'Server is busy, please try again later.' });
+    } else {
+        activeRequests++;
+        res.on('finish', () => activeRequests--); // Decrement count when request finishes
+        next();
+    }
+};
+
+app.use(concurrentLimitMiddleware);
 
 // Middleware for request timeouts
 const haltOnTimedout = (req, res, next) => {
     if (!req.timedout) next();
 };
-
-// Apply rate limiter globally
-app.use(limiter);
 
 // Timeout middleware (5 seconds)
 app.use(timeout('5s'));
@@ -34,7 +40,7 @@ app.use(express.json());
 
 // Status endpoint
 app.get('/ping', haltOnTimedout, (req, res) => {
-    res.status(200).json({ message: 'API Gateway running on 8080 is alive!' });
+    res.status(200).json({ detail: 'API Gateway running on 8080 is alive!' });
 });
 
 // Route to Service A
