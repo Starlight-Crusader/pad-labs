@@ -5,7 +5,7 @@ from django.conf import settings
 
 def get_timeout_from_token(token):
     try:
-        decoded_token = jwt.decode(token.split(" ")[1], options={"verify_signature": False})
+        decoded_token = jwt.decode(token, options={"verify_signature": False})
         exp_timestamp = decoded_token.get("exp")
 
         if exp_timestamp:

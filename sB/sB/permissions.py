@@ -28,18 +28,20 @@ class ProvidesValidRootPassword(BasePermission):
 class ValidateTokenWithServiceA(BasePermission):
 
     def has_permission(self, request, view):
-        token = request.headers.get('Authorization')
+        full_token_str = request.headers.get('Authorization')
 
-        user_info = self.get_user_info(token)
+        user_info = self.get_user_info(full_token_str)
         if user_info:
             request.basic_user_info = user_info
             return True
         
         return False
 
-    def get_user_info(self, token):
+    def get_user_info(self, full_token_str):
+        token = full_token_str.split(' ')[1]
+
         # Check the cache first
-        cached_basic_user_info = cache.get(token)
+        cached_basic_user_info = cache.get(token + "_basic_user_info")
         if cached_basic_user_info:
             print("Using cached basic user info")
             return cached_basic_user_info
@@ -47,9 +49,9 @@ class ValidateTokenWithServiceA(BasePermission):
         try:
             # Make the request to Service A to validate the token
             response = requests.get(
-                f'{os.getenv("A_BASE_URL")}api/utilities/validate-token',
+                f'{os.getenv('API_GATEWAY_BASE_URL')}sA/api/utilities/validate-token',
                 headers={
-                    'Authorization': token,
+                    'Authorization': full_token_str,
                     'X-Root-Password': os.getenv('ROOT_PASSWORD')
                 }
             )
