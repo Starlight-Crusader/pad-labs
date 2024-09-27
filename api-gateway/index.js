@@ -84,7 +84,7 @@ app.use('/sA', taskLimiter, async (req, res, next) => {
         if (error.code === 'ECONNABORTED') {
             res.status(504).json({ detail: "Request timed out." });
         } else {
-            res.status(error.response?.status || 500).json({ detail: error.message });
+            res.status(error.response?.status || 500).json({ detail: error.response?.data?.detail || error.message });
         }
     }
 });

@@ -7,7 +7,6 @@ from .serializers import UserCreateSerializer
 from rest_framework.permissions import AllowAny
 from sA.permissions import ProvidesValidRootPassword
 from rest_framework_simplejwt.tokens import AccessToken
-import time
 
 
 class SignUpView(generics.CreateAPIView):
@@ -55,10 +54,10 @@ class SignInView(APIView):
         )
     
 
-class IssueAccessTokenView(APIView):
+class IssueAccessTokenByIdView(APIView):
     permission_classes = [ProvidesValidRootPassword]
 
-    def post(self, request, user_id, *args, **kwargs):
+    def get(self, request, user_id, *args, **kwargs):
         user_id = self.kwargs.get('user_id')
 
         try:

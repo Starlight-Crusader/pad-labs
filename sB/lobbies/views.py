@@ -9,6 +9,21 @@ import requests
 import os
 from django.core.cache import cache
 from sB.utilities import get_timeout_from_token
+from rest_framework.exceptions import APIException
+
+
+def get_new_access_token(user_id):
+    try:
+        service_a_url = f"{os.getenv('API_GATEWAY_BASE_URL')}sA/authen/token/{user_id}"
+        response = requests.post(service_a_url)
+
+        if response.status_code == 200:
+            return response.json().get('access')
+        else:
+            raise APIException(f"Failed to get a new token from A: {response.status_code}, {response.text}")
+    
+    except requests.RequestException as e:
+        raise APIException(f"Error communicating with Service A: {str(e)}")
 
 
 class GameLobbyListView(generics.ListAPIView):
@@ -21,6 +36,27 @@ class CreateGameLobbyView(generics.CreateAPIView):
     queryset = GameLobby.objects.all()
     serializer_class = CreateGameLobbySerializer
     permission_classes = [ValidateTokenWithServiceA]
+
+    def create(self, request, *args, **kwargs):
+        # Call the superclass's create method to create the game lobby
+        response = super().create(request, *args, **kwargs)
+
+        user_id = request.basic_user_info['id']
+        access_token = get_new_access_token(user_id)
+
+        if not access_token:
+            return Response(
+                {'detail': 'Failed to issue access token.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        return Response(
+            {
+                'lobby': response.data,
+                'access_token': access_token
+            },
+            status=status.HTTP_201_CREATED
+        )
 
 
 class DiscoverGamesyLobbiesByRatingView(generics.ListAPIView):
@@ -138,10 +174,22 @@ class ConnectToGameLobbyView(generics.UpdateAPIView):
             if user_id not in lobby.spectators:
                 lobby.spectators.append(user_id)
 
-        # TODO: Issue a new access for 1 hour by asking service A
+        access_token = get_new_access_token(user_id)
+
+        if not access_token:
+            return Response(
+                {'detail': 'Failed to issue a new access.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
         lobby.save()
-        return Response(self.get_serializer(lobby).data)
+        return Response(
+            {
+                'lobby': self.get_serializer(lobby).data,
+                'access_token': access_token
+            },
+            status=status.HTTP_200_OK
+        )
     
 
 class GameLobbyDestroyView(generics.DestroyAPIView):
