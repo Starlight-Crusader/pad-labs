@@ -35,8 +35,6 @@ class SignInView(APIView):
     def post(self, request, *args, **kwargs):
         username = request.data.get("username")
         password = request.data.get("password")
-
-        time.sleep(4)
         
         try:
             user = User.objects.get(username=username)

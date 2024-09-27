@@ -138,6 +138,8 @@ class ConnectToGameLobbyView(generics.UpdateAPIView):
             if user_id not in lobby.spectators:
                 lobby.spectators.append(user_id)
 
+        # TODO: Issue a new access for 1 hour by asking service A
+
         lobby.save()
         return Response(self.get_serializer(lobby).data)
     

@@ -7,14 +7,29 @@ const app = express();
 // Load environment variables
 require('dotenv').config();
 
-const PORT = process.env.REST_PORT;
+const PORT = process.env.PORT;
 const SM_REDIS_URL = process.env.SM_REDIS_URL;
 const SERV_REST_PORT = process.env.SERV_REST_PORT;
-const SERVER_TIMEOUT_MS = 2000;
+const SERVER_TIMEOUT_MS = process.env.SERVER_TIMEOUT_MS;
+const MAX_CONCURRENT_REQUESTS = process.env.MAX_CONCURRENT_REQUESTS;
+
+let concurrentRequests = 0;
 
 // Connect to Redis
 const redisClient = redis.createClient({ url: SM_REDIS_URL });
 redisClient.connect();
+
+// Cleanly close Redis connection and server on shutdown - Gracefull Shutdown
+async function shutdown(signal) {
+    console.log(`Received ${signal}. Closing Redis and HTTP server...`);
+    await redisClient.quit();
+    server.close(() => {
+        console.log('Express server closed.');
+        process.exit(0);
+    });
+}
+
+['SIGINT', 'SIGTERM'].forEach(signal => process.on(signal, () => shutdown(signal)));
 
 // Status endpoint
 app.get('/ping', (req, res) => {
@@ -32,8 +47,20 @@ async function getServiceIPs(serviceType) {
     return ips;
 }
 
+// Middleware for limiting concurrent tasks
+const taskLimiter = (req, res, next) => {
+    if (concurrentRequests >= MAX_CONCURRENT_REQUESTS) {
+        return res.status(503).json({ detail: "API Gateway is busy. Please try again later." });
+    }
+    concurrentRequests++;
+    res.on('finish', () => {  // Decrease the counter when the request is finished
+        concurrentRequests--;
+    });
+    next();
+};
+
 // Route to Service A
-app.use('/sA', async (req, res, next) => {
+app.use('/sA', taskLimiter, async (req, res, next) => {
     try {
         const serviceIPs = await getServiceIPs('A');
         if (serviceIPs.length === 0) {
@@ -55,7 +82,7 @@ app.use('/sA', async (req, res, next) => {
         res.status(response.status).send(response.data);
     } catch (error) {
         if (error.code === 'ECONNABORTED') {
-            res.status(503).json({ detail: "Service is not available. Please try again later." });
+            res.status(504).json({ detail: "Request timed out." });
         } else {
             res.status(error.response?.status || 500).json({ detail: error.message });
         }
@@ -63,7 +90,7 @@ app.use('/sA', async (req, res, next) => {
 });
 
 // Route to Service B
-app.use('/sB', async (req, res, next) => {
+app.use('/sB', taskLimiter, async (req, res, next) => {
     try {
         const serviceIPs = await getServiceIPs('B');
         if (serviceIPs.length === 0) {

@@ -90,10 +90,13 @@ services:
       - PORT=8080
       - SM_REDIS_URL=redis://sm_redis:6379
       - SERV_REST_PORT=8000
+      - SERVER_TIMEOUT_MS=2000
+      - MAX_CONCURRENT_REQUESTS=10
     ports:
       - "8080:8080"
     depends_on:
       - sm_redis
+      - service-discovery
 
   service-discovery:
     container_name: service-discovery

@@ -43,4 +43,32 @@ function startGrpcServer() {
     });
 }
 
+// Graceful Shutdown
+async function shutdown(signal) {
+    console.log(`Received ${signal}. Shutting down gracefully...`);
+    
+    // Stop accepting new gRPC requests
+    server.tryShutdown(async (err) => {
+        if (err) {
+            console.error('Error shutting down gRPC server:', err);
+        } else {
+            console.log('gRPC server stopped accepting new requests.');
+        }
+        
+        // Close Redis connection
+        try {
+            await redisClient.quit();
+            console.log('Redis client disconnected.');
+        } catch (redisErr) {
+            console.error('Error disconnecting Redis client:', redisErr);
+        }
+
+        // Exit process after graceful shutdown
+        process.exit(0);
+    });
+}
+
+// Listen for shutdown signals (e.g., SIGINT for Ctrl+C, SIGTERM for Docker stop)
+['SIGINT', 'SIGTERM'].forEach(signal => process.on(signal, () => shutdown(signal)));
+
 startGrpcServer();
