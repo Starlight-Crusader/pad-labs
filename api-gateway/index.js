@@ -31,6 +31,8 @@ async function shutdown(signal) {
 
 ['SIGINT', 'SIGTERM'].forEach(signal => process.on(signal, () => shutdown(signal)));
 
+app.use(express.json());
+
 // Status endpoint
 app.get('/ping', (req, res) => {
     res.status(200).json({ detail: `API Gateway running on ${PORT} is alive!` });
@@ -112,9 +114,9 @@ app.use('/sB', taskLimiter, async (req, res, next) => {
         res.status(response.status).send(response.data);
     } catch (error) {
         if (error.code === 'ECONNABORTED') {
-            res.status(503).json({ detail: "Service is not available. Please try again later." });
+            res.status(504).json({ detail: "Request timed out." });
         } else {
-            res.status(error.response?.status || 500).json({ detail: error.message });
+            res.status(error.response?.status || 500).json({ detail: error.response?.data?.detail || error.message });
         }
     }
 });

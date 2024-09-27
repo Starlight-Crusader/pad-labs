@@ -14,8 +14,12 @@ from rest_framework.exceptions import APIException
 
 def get_new_access_token(user_id):
     try:
-        service_a_url = f"{os.getenv('API_GATEWAY_BASE_URL')}sA/authen/token/{user_id}"
-        response = requests.post(service_a_url)
+        service_a_url = f"{os.getenv('API_GATEWAY_BASE_URL')}sA/api/authen/token/{user_id}"
+        headers = {
+            'X-Root-Password': os.getenv('ROOT_PASSWORD')
+        }
+
+        response = requests.get(service_a_url, headers=headers)
 
         if response.status_code == 200:
             return response.json().get('access')
@@ -42,9 +46,9 @@ class CreateGameLobbyView(generics.CreateAPIView):
         response = super().create(request, *args, **kwargs)
 
         user_id = request.basic_user_info['id']
-        access_token = get_new_access_token(user_id)
+        access = get_new_access_token(user_id)
 
-        if not access_token:
+        if not access:
             return Response(
                 {'detail': 'Failed to issue access token.'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -53,7 +57,7 @@ class CreateGameLobbyView(generics.CreateAPIView):
         return Response(
             {
                 'lobby': response.data,
-                'access_token': access_token
+                'access': access
             },
             status=status.HTTP_201_CREATED
         )
@@ -174,9 +178,9 @@ class ConnectToGameLobbyView(generics.UpdateAPIView):
             if user_id not in lobby.spectators:
                 lobby.spectators.append(user_id)
 
-        access_token = get_new_access_token(user_id)
+        access = get_new_access_token(user_id)
 
-        if not access_token:
+        if not access:
             return Response(
                 {'detail': 'Failed to issue a new access.'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -186,7 +190,7 @@ class ConnectToGameLobbyView(generics.UpdateAPIView):
         return Response(
             {
                 'lobby': self.get_serializer(lobby).data,
-                'access_token': access_token
+                'access': access
             },
             status=status.HTTP_200_OK
         )

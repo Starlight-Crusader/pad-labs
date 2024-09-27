@@ -86,7 +86,7 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
             self.room_group_name,
             {
                 'type': type,
-                'message': message
+                'message': f"{self.scope['basic_user_info']['username']}: {message}"
             }
         )
 
