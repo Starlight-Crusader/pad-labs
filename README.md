@@ -18,7 +18,8 @@
 
 - Service A (**Python**): **Django** + **PostgreSQL**
 - Service B (**Python**): **Django** + **PostgreSQL** + **Dj Channels** (WS) + **Redis** (Channel Layers) + * Native Django cache
-- API Gateway (**JS**): **Express** + **Redis** (servers metadata)
+- API Gateway (**JS**): **Express** + **Redis** (servers metadata src.)
+- Service Discovery (**JS**): **Express** + **Redis** (servers metadata dst.)
 - Inter-service communication: RESTful APIs (CRUD) and gRPC (service discovery)
 
 ### Data Management Design (Main Endpoints)
