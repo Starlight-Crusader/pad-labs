@@ -5,6 +5,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status, generics
 from .serializers import UserCreateSerializer
 from rest_framework.permissions import AllowAny
+from sA.permissions import ProvidesValidRootPassword
+from rest_framework_simplejwt.tokens import AccessToken
+import time
 
 
 class SignUpView(generics.CreateAPIView):
@@ -32,6 +35,8 @@ class SignInView(APIView):
     def post(self, request, *args, **kwargs):
         username = request.data.get("username")
         password = request.data.get("password")
+
+        time.sleep(4)
         
         try:
             user = User.objects.get(username=username)
@@ -47,6 +52,30 @@ class SignInView(APIView):
             {
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
+            },
+            status=status.HTTP_200_OK
+        )
+    
+
+class IssueAccessTokenView(APIView):
+    permission_classes = [ProvidesValidRootPassword]
+
+    def post(self, request, user_id, *args, **kwargs):
+        user_id = self.kwargs.get('user_id')
+
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {"detail": "User not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        access_token = AccessToken.for_user(user)
+
+        return Response(
+            {
+                'access': str(access_token),
             },
             status=status.HTTP_200_OK
         )

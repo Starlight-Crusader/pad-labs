@@ -47,7 +47,7 @@ services:
       - DATABASE_URL=postgres://service_a_user:service_a_password@postgres_a:5432/service_a_db
       - API_GATEWAY_BASE_URL=http://api-gateway:8080/
       - SERVICE_TYPE=A
-      - SD_HOST=api-gateway
+      - SD_HOST=service-discovery
       - SD_PORT=50051
     ports:
       - "8000:8000"
@@ -70,7 +70,7 @@ services:
       - CHANNELS_REDIS_HOST=service_redis
       - CHANNELS_REDIS_PORT=6379
       - SERVICE_TYPE=B
-      - SD_HOST=api-gateway
+      - SD_HOST=service-discovery
       - SD_PORT=50051
     ports:
       - "8001:8000"
@@ -87,12 +87,24 @@ services:
     build:
       context: ./api-gateway
     environment:
-      - REST_PORT=8080
-      - GRPC_PORT=50051
+      - PORT=8080
       - SM_REDIS_URL=redis://sm_redis:6379
       - SERV_REST_PORT=8000
     ports:
       - "8080:8080"
+    depends_on:
+      - sm_redis
+
+  service-discovery:
+    container_name: service-discovery
+    build:
+      context: ./service-discovery
+    environment:
+      - PORT=50051
+      - SM_REDIS_URL=redis://sm_redis:6379
+      - SERV_REST_PORT=8000
+    ports:
+      - "50051:50051"
     depends_on:
       - sm_redis
 

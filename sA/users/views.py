@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from sA.permissions import ProvidesValidRootPassword
+import time
 
 
 class UserListView(generics.ListAPIView):
@@ -15,6 +16,7 @@ class UserListView(generics.ListAPIView):
         user_id = self.request.query_params.get('id', None)
         if user_id:
             return User.objects.filter(id=user_id)
+
         return User.objects.all()
 
 
