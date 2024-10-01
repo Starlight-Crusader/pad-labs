@@ -35,7 +35,7 @@ app.use(express.json());
 
 // Status endpoint
 app.get('/ping', (req, res) => {
-    res.status(200).json({ detail: `API Gateway running on ${PORT} is alive!` });
+    res.status(200).json({ message: `API Gateway running at http://127.0.0.1:${PORT} is alive!` });
 });
 
 // Round-robin stuff
@@ -122,5 +122,5 @@ app.use('/sB', taskLimiter, async (req, res, next) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`API Gateway listening at http://localhost:${PORT}`);
+    console.log(`API Gateway listening at http://127.0.0.1:${PORT}`);
 });

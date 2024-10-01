@@ -13,9 +13,12 @@ const redisClient = redis.createClient({ url: SM_REDIS_URL });
 redisClient.connect();
 
 // Load protobuf
-const PROTO_PATH = './service_discovery.proto';
-const packageDefinition = protoLoader.loadSync(PROTO_PATH, {});
-const discoveryProto = grpc.loadPackageDefinition(packageDefinition).discovery;
+const PROTO_PATH_DISCOVERY = './service_discovery.proto';
+const PROTO_PATH_PING = './ping.proto';
+const packageDefinitionDiscovery = protoLoader.loadSync(PROTO_PATH_DISCOVERY, {});
+const packageDefinitionPing = protoLoader.loadSync(PROTO_PATH_PING, {});
+const discoveryProto = grpc.loadPackageDefinition(packageDefinitionDiscovery).discovery;
+const pingProto = grpc.loadPackageDefinition(packageDefinitionPing).ping;
 
 // gRPC Server for service discovery
 function registerService(call, callback) {
@@ -33,42 +36,50 @@ function registerService(call, callback) {
         });
 }
 
+// gRPC ping
+function ping(call, callback) {
+    callback(null, {message: `Service Discovery running at http://0.0.0.0:${PORT} is alive!`})
+}
+
 // Create gRPC server
 function startGrpcServer() {
     const server = new grpc.Server();
+    
+    server.addService(pingProto.Ping.service, { Ping: ping });
     server.addService(discoveryProto.ServiceDiscovery.service, { Register: registerService });
+    
     server.bindAsync(`0.0.0.0:${PORT}`, grpc.ServerCredentials.createInsecure(), () => {
         console.log(`gRPC service discovery running at http://0.0.0.0:${PORT}`);
         server.start();
     });
-}
 
-// Graceful Shutdown
-async function shutdown(signal) {
-    console.log(`Received ${signal}. Shutting down gracefully...`);
-    
-    // Stop accepting new gRPC requests
-    server.tryShutdown(async (err) => {
-        if (err) {
-            console.error('Error shutting down gRPC server:', err);
-        } else {
-            console.log('gRPC server stopped accepting new requests.');
-        }
+    // Graceful Shutdown
+    async function shutdown(signal) {
+        console.log(`Received ${signal}. Shutting down gracefully...`);
         
-        // Close Redis connection
-        try {
-            await redisClient.quit();
-            console.log('Redis client disconnected.');
-        } catch (redisErr) {
-            console.error('Error disconnecting Redis client:', redisErr);
-        }
+        // Stop accepting new gRPC requests
+        server.tryShutdown(async (err) => {
+            if (err) {
+                console.error('Error shutting down gRPC server:', err);
+            } else {
+                console.log('gRPC server stopped accepting new requests.');
+            }
+            
+            // Close Redis connection
+            try {
+                await redisClient.quit();
+                console.log('Redis client disconnected.');
+            } catch (redisErr) {
+                console.error('Error disconnecting Redis client:', redisErr);
+            }
 
-        // Exit process after graceful shutdown
-        process.exit(0);
-    });
+            // Exit process after graceful shutdown
+            process.exit(0);
+        });
+    }
+
+    // Listen for shutdown signals (e.g., SIGINT for Ctrl+C, SIGTERM for Docker stop)
+    ['SIGINT', 'SIGTERM'].forEach(signal => process.on(signal, () => shutdown(signal)));
 }
-
-// Listen for shutdown signals (e.g., SIGINT for Ctrl+C, SIGTERM for Docker stop)
-['SIGINT', 'SIGTERM'].forEach(signal => process.on(signal, () => shutdown(signal)));
 
 startGrpcServer();
