@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 import os
 
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY', 'Ueee')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -92,13 +92,17 @@ import dj_database_url
 DATABASES = {
     'default': dj_database_url.config(
         default=os.getenv(
-            'DATABASE_URL'
+            'DATABASE_URL', 'postgres://service_a_user:service_a_password@postgres_a:5432/service_a_db'
         )
     ),
-    # 'default': dj_database_url.config(
-    #     default=os.getenv('TEST_DATABASE_URL')
-    # ),
 }
+
+import sys
+
+if 'test' in sys.argv:
+    DATABASES['default'] = dj_database_url.config(
+        default=os.getenv('TEST_DATABASE_URL', 'sqlite://:memory:')
+    )
 
 
 # Password validation
