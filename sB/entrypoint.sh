@@ -9,4 +9,4 @@ python manage.py migrate
 python grpc_registration/register_service.py
 
 # Start the application
-exec uvicorn sB.asgi:application --host 0.0.0.0 --port 8000 --reload
+exec uvicorn sB.asgi:application --host 0.0.0.0 --port 8000 --reload --no-access-log

@@ -17,13 +17,13 @@ class GameLobbyListSerialzer(serializers.ModelSerializer):
 class ConnectToGameLobbySerializer(serializers.ModelSerializer):
     class Meta:
         model = GameLobby
-        fields = ['identifier']
+        fields = ['connect_url']
 
 
 class CreateGameLobbySerializer(serializers.ModelSerializer):
     class Meta:
         model = GameLobby
-        fields = ['identifier']
+        fields = ['connect_url']
 
     def create(self, validated_data):
         user_id = self.context['request'].basic_user_info['id']

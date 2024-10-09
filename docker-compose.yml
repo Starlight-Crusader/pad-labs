@@ -32,8 +32,8 @@ services:
       - "6379:6379"
     command: redis-server --save "" --appendonly no
 
-  service-a:
-    container_name: service-a
+  service-a-1:
+    container_name: service-a-1
     build:
       context: ./sA
     entrypoint: ["./entrypoint.sh"]
@@ -49,11 +49,54 @@ services:
       - SERVICE_TYPE=A
       - SD_HOST=service-discovery
       - SD_PORT=50051
+      - PORT=8000
     ports:
       - "8000:8000"
 
-  service-b:
-    container_name: service-b
+  service-a-2:
+    container_name: service-a-2
+    build:
+      context: ./sA
+    entrypoint: ["./entrypoint.sh"]
+    volumes:
+      - ./sA:/app
+    depends_on:
+      - postgres_a
+      - api-gateway
+    environment:
+      - DJANGO_SETTINGS_MODULE=sA.settings
+      - DATABASE_URL=postgres://service_a_user:service_a_password@postgres_a:5432/service_a_db
+      - API_GATEWAY_BASE_URL=http://api-gateway:8080/
+      - SERVICE_TYPE=A
+      - SD_HOST=service-discovery
+      - SD_PORT=50051
+      - PORT=8001
+    ports:
+      - "8001:8000"
+
+  service-a-3:
+    container_name: service-a-3
+    build:
+      context: ./sA
+    entrypoint: ["./entrypoint.sh"]
+    volumes:
+      - ./sA:/app
+    depends_on:
+      - postgres_a
+      - api-gateway
+    environment:
+      - DJANGO_SETTINGS_MODULE=sA.settings
+      - DATABASE_URL=postgres://service_a_user:service_a_password@postgres_a:5432/service_a_db
+      - API_GATEWAY_BASE_URL=http://api-gateway:8080/
+      - SERVICE_TYPE=A
+      - SD_HOST=service-discovery
+      - SD_PORT=50051
+      - PORT=8003
+    ports:
+      - "8003:8000"
+
+  service-b-1:
+    container_name: service-b-1
     build:
       context: ./sB
     entrypoint: ["./entrypoint.sh"]
@@ -72,8 +115,57 @@ services:
       - SERVICE_TYPE=B
       - SD_HOST=service-discovery
       - SD_PORT=50051
+      - PORT=8004
     ports:
-      - "8001:8000"
+      - "8004:8000"
+
+  service-b-2:
+    container_name: service-b-2
+    build:
+      context: ./sB
+    entrypoint: ["./entrypoint.sh"]
+    volumes:
+      - ./sB:/app
+    depends_on:
+      - postgres_b
+      - api-gateway
+      - service_redis
+    environment:
+      - DJANGO_SETTINGS_MODULE=sB.settings
+      - DATABASE_URL=postgres://service_b_user:service_b_password@postgres_b:5432/service_b_db
+      - API_GATEWAY_BASE_URL=http://api-gateway:8080/
+      - CHANNELS_REDIS_HOST=service_redis
+      - CHANNELS_REDIS_PORT=6379
+      - SERVICE_TYPE=B
+      - SD_HOST=service-discovery
+      - SD_PORT=50051
+      - PORT=8005
+    ports:
+      - "8005:8000"
+
+  service-b-3:
+    container_name: service-b-3
+    build:
+      context: ./sB
+    entrypoint: ["./entrypoint.sh"]
+    volumes:
+      - ./sB:/app
+    depends_on:
+      - postgres_b
+      - api-gateway
+      - service_redis
+    environment:
+      - DJANGO_SETTINGS_MODULE=sB.settings
+      - DATABASE_URL=postgres://service_b_user:service_b_password@postgres_b:5432/service_b_db
+      - API_GATEWAY_BASE_URL=http://api-gateway:8080/
+      - CHANNELS_REDIS_HOST=service_redis
+      - CHANNELS_REDIS_PORT=6379
+      - SERVICE_TYPE=B
+      - SD_HOST=service-discovery
+      - SD_PORT=50051
+      - PORT=8006
+    ports:
+      - "8006:8000"
 
   sm_redis:
     image: redis:latest

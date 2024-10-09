@@ -71,6 +71,7 @@ app.use('/sA', taskLimiter, async (req, res, next) => {
 
         // Round-robin logic
         const serviceUrl = `http://${serviceIPs[serviceAIndex]}:${SERV_REST_PORT}/${req.url.slice(1)}`;
+        console.log(serviceUrl);
         serviceAIndex = (serviceAIndex + 1) % serviceIPs.length;
 
         const response = await axios({
@@ -101,6 +102,7 @@ app.use('/sB', taskLimiter, async (req, res, next) => {
 
         // Round-robin logic
         const serviceUrl = `http://${serviceIPs[serviceBIndex]}:${SERV_REST_PORT}/${req.url.slice(1)}`;
+        console.log(serviceUrl);
         serviceBIndex = (serviceBIndex + 1) % serviceIPs.length;
 
         const response = await axios({
