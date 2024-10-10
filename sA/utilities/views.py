@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from users.serializers import UserSerializer
 import time
+import os
 
 
 class ValidateTokenForBView(APIView):
@@ -33,7 +34,7 @@ class SleepyView(APIView):
     permission_classes = [ProvidesValidRootPassword]
 
     def get(self, request):
-        time.sleep(10)
+        time.sleep(int(os.getenv('SLEEP_DURATION_S')))
 
         return Response(
             {'message': f"You are not supposed to see this message!"},

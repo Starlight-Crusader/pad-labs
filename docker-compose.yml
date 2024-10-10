@@ -50,6 +50,7 @@ services:
       - SD_HOST=service-discovery
       - SD_PORT=50051
       - PORT=8000
+      - SLEEP_DURATION_S=10
     ports:
       - "8000:8000"
 
@@ -71,6 +72,7 @@ services:
       - SD_HOST=service-discovery
       - SD_PORT=50051
       - PORT=8001
+      - SLEEP_DURATION_S=10
     ports:
       - "8001:8000"
 
@@ -92,6 +94,7 @@ services:
       - SD_HOST=service-discovery
       - SD_PORT=50051
       - PORT=8003
+      - SLEEP_DURATION_S=10
     ports:
       - "8003:8000"
 
@@ -182,8 +185,9 @@ services:
       - PORT=8080
       - SM_REDIS_URL=redis://sm_redis:6379
       - SERV_REST_PORT=8000
-      - SERVER_TIMEOUT_MS=2000
-      - MAX_CONCURRENT_REQUESTS=1
+      - SERVER_TIMEOUT_MS=9000
+      - MAX_CONCURRENT_REQUESTS=3
+      - CRTICAL_LOAD_FOR_SERVICE=1
     ports:
       - "8080:8080"
     depends_on:
