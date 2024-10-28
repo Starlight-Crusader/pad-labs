@@ -25,7 +25,7 @@ class StatusView(APIView):
 
     def get(self, request):
         return Response(
-            {'message': f"Instance of service A running on {request.get_host()} is alive!"},
+            {'message': f"Instance of service A running on 127.0.0.1:{os.getenv('PORT')} is alive!"},
             status=status.HTTP_202_ACCEPTED
         )
     

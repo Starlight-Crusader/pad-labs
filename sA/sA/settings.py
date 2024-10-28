@@ -29,7 +29,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'Ueee')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['service-a', '127.0.0.1', 'localhost', 'api-gateway']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition

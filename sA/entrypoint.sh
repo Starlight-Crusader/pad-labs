@@ -9,4 +9,4 @@ python manage.py migrate
 python grpc_registration/register_service.py
 
 # Start the application
-exec gunicorn --bind 0.0.0.0:8000 sA.wsgi:application
+exec gunicorn --bind 0.0.0.0:8000 --reload --log-level critical sA.wsgi:application

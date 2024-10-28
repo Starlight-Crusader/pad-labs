@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-jxu7fh1a^6@=&av$7_uc(1_y75=lsc_!v*yc_$as$ey$wefw!n
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['service-b', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -82,10 +82,7 @@ import os
 
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [(os.getenv('CHANNELS_REDIS_HOST'), int(os.getenv('CHANNELS_REDIS_PORT')))],
-        },
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
     },
 }
 
@@ -93,19 +90,22 @@ CHANNEL_LAYERS = {
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-import os
 import dj_database_url
 
 DATABASES = {
     'default': dj_database_url.config(
         default=os.getenv(
-            'DATABASE_URL'
+            'DATABASE_URL', 'postgres://service_a_user:service_a_password@postgres_a:5432/service_a_db'
         )
     ),
-    # 'default': dj_database_url.config(
-    #     default=os.getenv('TEST_DATABASE_URL')
-    # ),
 }
+
+import sys
+
+if 'test' in sys.argv:
+    DATABASES['default'] = dj_database_url.config(
+        default=os.getenv('TEST_DATABASE_URL', 'sqlite://:memory:')
+    )
 
 
 # Password validation

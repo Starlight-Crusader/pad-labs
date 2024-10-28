@@ -93,7 +93,7 @@ class DiscoverGamesyLobbiesWithFriendsView(generics.ListAPIView):
         else:
             # Retrieve the list of friend IDs from service A
             friends_ids_response = requests.get(
-                f'{os.getenv("A_BASE_URL")}api/friends/get-ids',
+                f'{os.getenv('API_GATEWAY_BASE_URL')}sA/api/friends/get-ids',
                 headers={
                     'Authorization': token,
                     'X-Root-Password': os.getenv('ROOT_PASSWORD')
