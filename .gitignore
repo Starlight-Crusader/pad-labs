@@ -132,9 +132,6 @@ venv.bak/
 envA/
 envB/
 test_env/
-set_env_vars.bat
-set_env_vars.sh
-docker-compose.secrets.yml
 
 # Spyder project settings
 .spyderproject
@@ -183,7 +180,3 @@ benchmarks/graphs
 
 # ignore additional files using core.excludesFile
 # https://git-scm.com/docs/gitignore
-
-# Project
-
-consumer_test.py

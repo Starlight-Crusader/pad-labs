@@ -1,7 +1,7 @@
-from rest_framework import generics
+from rest_framework import generics, response, status
 from .models import GameRecord
 from .serializers import GameRecordSerializer
-from sB.permissions import ProvidesValidRootPassword, ValidateTokenWithServiceA
+from sB.permissions import ValidateTokenWithServiceA
 from django.db.models import Q
 
 
@@ -28,3 +28,13 @@ class SaveGameRecordView(generics.CreateAPIView):
     queryset = GameRecord.objects.all()
     serializer_class = GameRecordSerializer
     permission_classes = [ValidateTokenWithServiceA]
+
+    def create(self, request, *args, **kwargs):
+        # Call the original create method to save the game record
+        super().create(request, *args, **kwargs)
+        
+        # Return a custom response with a confirmation message
+        return response.Response(
+            {"message": "Game record saved successfully."},
+            status=status.HTTP_201_CREATED
+        )

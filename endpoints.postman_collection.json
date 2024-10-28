@@ -1,0 +1,922 @@
+{
+	"info": {
+		"_postman_id": "534a545a-ba3d-45fb-85a2-1c186b57fbd7",
+		"name": "API Endpoints",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "29828822"
+	},
+	"item": [
+		{
+			"name": "Service A",
+			"item": [
+				{
+					"name": "Users",
+					"item": [
+						{
+							"name": "List",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-Root-Password",
+										"value": "{{root_password}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{a_base_url}}api/users/list?id=",
+									"host": [
+										"{{a_base_url}}api"
+									],
+									"path": [
+										"users",
+										"list"
+									],
+									"query": [
+										{
+											"key": "id",
+											"value": ""
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Destroy",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "X-Root-Password",
+										"value": "{{root_password}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{a_base_url}}api/users/6/destroy",
+									"host": [
+										"{{a_base_url}}api"
+									],
+									"path": [
+										"users",
+										"6",
+										"destroy"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Rating",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "X-Root-Password",
+										"value": "{{root_password}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{a_base_url}}api/users/rating/upd?id=9&delta=200",
+									"host": [
+										"{{a_base_url}}api"
+									],
+									"path": [
+										"users",
+										"rating",
+										"upd"
+									],
+									"query": [
+										{
+											"key": "id",
+											"value": "9"
+										},
+										{
+											"key": "delta",
+											"value": "200"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Friends",
+					"item": [
+						{
+							"name": "Search Users",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{a_base_url}}api/friends/search?uname=name",
+									"host": [
+										"{{a_base_url}}api"
+									],
+									"path": [
+										"friends",
+										"search"
+									],
+									"query": [
+										{
+											"key": "uname",
+											"value": "name"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Open Request",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{a_base_url}}api/friends/requests/open?to=2",
+									"host": [
+										"{{a_base_url}}api"
+									],
+									"path": [
+										"friends",
+										"requests",
+										"open"
+									],
+									"query": [
+										{
+											"key": "to",
+											"value": "2"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Requests",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-Root-Password",
+										"value": "{{root_password}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{a_base_url}}api/friends/requests/list/all",
+									"host": [
+										"{{a_base_url}}api"
+									],
+									"path": [
+										"friends",
+										"requests",
+										"list",
+										"all"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Received Requests",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{a_base_url}}api/friends/requests/list/my",
+									"host": [
+										"{{a_base_url}}api"
+									],
+									"path": [
+										"friends",
+										"requests",
+										"list",
+										"my"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Resolve Request",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{a_base_url}}api/friends/requests/resolve?id=1&accepted=1",
+									"host": [
+										"{{a_base_url}}api"
+									],
+									"path": [
+										"friends",
+										"requests",
+										"resolve"
+									],
+									"query": [
+										{
+											"key": "id",
+											"value": "1"
+										},
+										{
+											"key": "accepted",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Destroy Request",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "X-Root-Password",
+										"value": "{{root_password}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{a_base_url}}api/friends/requests/10/destroy",
+									"host": [
+										"{{a_base_url}}api"
+									],
+									"path": [
+										"friends",
+										"requests",
+										"10",
+										"destroy"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Ids List",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{token}}",
+										"type": "text"
+									},
+									{
+										"key": "X-Root-Password",
+										"value": "{{root_password}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{a_base_url}}api/friends/get-ids",
+									"host": [
+										"{{a_base_url}}api"
+									],
+									"path": [
+										"friends",
+										"get-ids"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Authen",
+					"item": [
+						{
+							"name": "Sign Up",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\": \"username2\",\r\n    \"password\": \"username2pass\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{a_base_url}}api/authen/signup",
+									"host": [
+										"{{a_base_url}}api"
+									],
+									"path": [
+										"authen",
+										"signup"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Sign In",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var responseData = pm.response.json();\r",
+											"pm.globals.set(\"token\", \"Bearer \" + responseData.access);"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\": \"username2\",\r\n    \"password\": \"username2pass\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{a_base_url}}api/authen/signin",
+									"host": [
+										"{{a_base_url}}api"
+									],
+									"path": [
+										"authen",
+										"signin"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Issue Access By Id",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var responseData = pm.response.json();\r",
+											"pm.globals.set(\"token\", \"Bearer \" + responseData.access);"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-Root-Password",
+										"value": "{{root_password}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{a_base_url}}api/authen/token/9999",
+									"host": [
+										"{{a_base_url}}api"
+									],
+									"path": [
+										"authen",
+										"token",
+										"9999"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Utilities",
+					"item": [
+						{
+							"name": "Validate Token for B",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-Root-Password",
+										"value": "{{root_password}}",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "{{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{a_base_url}}api/utilities/validate-token",
+									"host": [
+										"{{a_base_url}}api"
+									],
+									"path": [
+										"utilities",
+										"validate-token"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Ping",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-Root-Password",
+										"value": "{{root_password}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{a_base_url}}api/utilities/ping",
+									"host": [
+										"{{a_base_url}}api"
+									],
+									"path": [
+										"utilities",
+										"ping"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Sleepy 1",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-Root-Password",
+										"value": "{{root_password}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{a_base_url}}api/utilities/sleepy",
+									"host": [
+										"{{a_base_url}}api"
+									],
+									"path": [
+										"utilities",
+										"sleepy"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Sleepy 2",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-Root-Password",
+										"value": "{{root_password}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{a_base_url}}api/utilities/sleepy",
+									"host": [
+										"{{a_base_url}}api"
+									],
+									"path": [
+										"utilities",
+										"sleepy"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Sleepy 3",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-Root-Password",
+										"value": "{{root_password}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{a_base_url}}api/utilities/sleepy",
+									"host": [
+										"{{a_base_url}}api"
+									],
+									"path": [
+										"utilities",
+										"sleepy"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Service B",
+			"item": [
+				{
+					"name": "Utilities",
+					"item": [
+						{
+							"name": "Ping",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-Root-Password",
+										"value": "{{root_password}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{b_base_url}}api/utilities/ping",
+									"host": [
+										"{{b_base_url}}api"
+									],
+									"path": [
+										"utilities",
+										"ping"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Records",
+					"item": [
+						{
+							"name": "List",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-Root-Password",
+										"value": "{{root_password}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{b_base_url}}api/records/list?uname=",
+									"host": [
+										"{{b_base_url}}api"
+									],
+									"path": [
+										"records",
+										"list"
+									],
+									"query": [
+										{
+											"key": "uname",
+											"value": ""
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Save",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"white_player\": \"username4\",\r\n    \"black_player\": \"username5\",\r\n    \"moves\": [\"e4\", \"e5\", \"Qh5\", \"Nc6\", \"Bc4\", \"Nf6\", \"Qxf7#\"]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{b_base_url}}api/records/save",
+									"host": [
+										"{{b_base_url}}api"
+									],
+									"path": [
+										"records",
+										"save"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Lobies",
+					"item": [
+						{
+							"name": "List",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-Root-Password",
+										"value": "{{root_password}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{b_base_url}}api/lobbies/list",
+									"host": [
+										"{{b_base_url}}api"
+									],
+									"path": [
+										"lobbies",
+										"list"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var responseData = pm.response.json();\r",
+											"pm.globals.set(\"connect_url\", responseData.lobby.connect_url);\r",
+											"pm.globals.set(\"token\", \"Bearer \" + responseData.access);"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{b_base_url}}api/lobbies/create",
+									"host": [
+										"{{b_base_url}}api"
+									],
+									"path": [
+										"lobbies",
+										"create"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Destroy",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "X-Root-Password",
+										"value": "{{root_password}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{b_base_url}}api/lobbies/6/destroy",
+									"host": [
+										"{{b_base_url}}api"
+									],
+									"path": [
+										"lobbies",
+										"6",
+										"destroy"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Connect",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var responseData = pm.response.json();\r",
+											"pm.globals.set(\"connect_url\", responseData.lobby.connect_url);\r",
+											"pm.globals.set(\"token\", \"Bearer \" + responseData.access);"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{b_base_url}}api/lobbies/connect?id=2&is_player=1",
+									"host": [
+										"{{b_base_url}}api"
+									],
+									"path": [
+										"lobbies",
+										"connect"
+									],
+									"query": [
+										{
+											"key": "id",
+											"value": "2"
+										},
+										{
+											"key": "is_player",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Discover By Rating",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{b_base_url}}api/lobbies/discover/rating",
+									"host": [
+										"{{b_base_url}}api"
+									],
+									"path": [
+										"lobbies",
+										"discover",
+										"rating"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Discover By Friends",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "{{token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{b_base_url}}api/lobbies/discover/friends",
+									"host": [
+										"{{b_base_url}}api"
+									],
+									"path": [
+										"lobbies",
+										"discover",
+										"friends"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Gateway",
+			"item": [
+				{
+					"name": "Ping",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Root-Password",
+								"value": "{{root_password}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_base_url}}ping",
+							"host": [
+								"{{gateway_base_url}}ping"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "test_base_url",
+			"value": "http://127.0.0.1:8000/",
+			"type": "string"
+		},
+		{
+			"key": "root_password",
+			"value": "SambubU",
+			"type": "string"
+		},
+		{
+			"key": "a_base_url",
+			"value": "http://127.0.0.1:8000/",
+			"type": "string"
+		},
+		{
+			"key": "b_base_url",
+			"value": "http://127.0.0.1:8001/",
+			"type": "string"
+		},
+		{
+			"key": "gateway_base_url",
+			"value": "http://127.0.0.1:8080/",
+			"type": "string"
+		},
+		{
+			"key": "ws_lobby_identifier",
+			"value": ""
+		}
+	]
+}

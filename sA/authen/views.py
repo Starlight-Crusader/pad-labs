@@ -22,7 +22,7 @@ class SignUpView(generics.CreateAPIView):
         return Response(
             {
                 'detail': 'Account created successfully.',
-                'user': response.data
+                # 'user': response.data
             },
             status=status.HTTP_201_CREATED
         )
