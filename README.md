@@ -5,6 +5,29 @@
 docker-compose -f docker-compose.yml -f docker-compose.secrets.yml up --build
 ```
 
+**In order to run the tests** for sA:
+
+1. Create a virtual environment
+
+
+        python -m vevn env
+
+2. Activate it
+
+
+        For Linux:   source env/bin/activate
+        For Windows: env\Scripts\activate
+
+3. Install the dependencies
+
+
+        pip install -r sa/requirements.txt
+
+4. Run the tests
+
+
+        python sa/manage.py test
+
 ## Application Suitability Assessment
 
 1. Chess websites may experience different levels of traffic in different parts of the system, for example during tournaments, live broadcasts, or when new features are released. Microservices allow **to independently scale** high-load services without affecting other parts of the system.\*
