@@ -33,6 +33,7 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
 
         # Check if connecting user is registered to be in the lobby
         if not (await self.is_player_in_lobby(self.user_id) or await self.is_spectator_in_lobby(self.user_id)):
+            self.user_id = None
             await self.send_error("This is an unauthorized access attempt.")
             await self.close()
             return
@@ -52,7 +53,7 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
         )
 
     async def disconnect(self, close_code):
-        if self.scope.get('basic_user_info'):
+        if self.user_id:
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {

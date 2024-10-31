@@ -17,9 +17,9 @@ def register_service(service_type, sd_host, sd_port):
         # Register the service
         response = stub.Register(request)
         if response.success:
-            print(f"Successfully registered service '{service_type}' with IP '{local_ip}'")
+            print(f"SUCCESS: Successfully registered service '{service_type}' with IP '{local_ip}'")
         else:
-            print(f"Failed to register service '{service_type}': {response.message}")
+            print(f"FAILURE: Failed to register service '{service_type}': {response.message}")
 
 
 if __name__ == "__main__":

@@ -43,7 +43,7 @@ class ValidateTokenWithServiceA(BasePermission):
         # Check the cache first
         cached_basic_user_info = cache.get(token + "_basic_user_info")
         if cached_basic_user_info:
-            print("Using cached basic user info")
+            print(f"Using cached basic user info for user#{cached_basic_user_info.get('id')}")
             return cached_basic_user_info
 
         try:
@@ -70,4 +70,4 @@ class ValidateTokenWithServiceA(BasePermission):
 
         if timeout is not None:
             cache.set(token + "_basic_user_info", basic_user_info, timeout=timeout)
-            print("Cached token verification")
+            print(f"Cached basic user info for user#{basic_user_info.get('id')}")

@@ -27,7 +27,7 @@ function registerService(call, callback) {
     
     redisClient.lPush(redisKey, ip)
         .then(() => {
-            console.log(`Registered ${redisKey} at IP - ${ip}`);
+            console.log(`LOG: Registered ${redisKey} at IP - ${ip}`);
             callback(null, { success: true, detail: `Service ${serviceType} registered successfully.` });
         })
         .catch(err => {
@@ -49,7 +49,7 @@ function startGrpcServer() {
     server.addService(discoveryProto.ServiceDiscovery.service, { Register: registerService });
     
     server.bindAsync(`0.0.0.0:${PORT}`, grpc.ServerCredentials.createInsecure(), () => {
-        console.log(`gRPC service discovery running at http://0.0.0.0:${PORT}`);
+        console.log(`LOG: gRPC service discovery running at http://0.0.0.0:${PORT}`);
         server.start();
     });
 

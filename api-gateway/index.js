@@ -61,80 +61,6 @@ async function decParam(param, ip, minVal = 0) {
     return Math.max(newValue, minVal);
 }
 
-// Middleware to limit tasks per IP
-const taskLimiter = async (req, res, next) => {
-    try {
-        const currentTasks = await getParam('tasks',  req.serviceIP);
-
-        if (currentTasks && parseInt(currentTasks) >= MAX_TASKS_PER_SERVICE) {
-            throw new Error(`Reached task limit for ${req.serviceIP}`);
-        }
-
-        await incParam('tasks', req.serviceIP);
-
-        next();
-    } catch (error) {
-        if (error.message === `Reached task limit for ${req.serviceIP}`)
-        {
-            console.log("ALERT:", error.message);
-            res.status(503).json({ detail: error.message });
-        } else {
-            console.error(`Failed task limiting for ${serviceType}:`, error);
-            res.status(500).json({ detail: "Gateway error." });
-        }
-    }
-}
-
-// Helper function to find the IP with the lowest load
-async function getLowestLoadIP(serviceType) {
-    const serviceIPs = await getServiceIPs(serviceType);
-
-    if (serviceIPs.length == 0)
-    {
-        throw new Error(`No ${serviceType} instances available`)
-    }
-
-    let lowestLoadIP = serviceIPs[0];
-    let lowestLoad = await getParam('tasks', lowestLoadIP);
-
-    for (const ip of serviceIPs) {
-        const load = await getParam('tasks', ip);
-        if (load < lowestLoad) {
-            lowestLoad = load;
-            lowestLoadIP = ip;
-        }
-    }
-
-    return lowestLoadIP;
-}
-
-// Middleware for load-based routing and load limit checking
-const loadBalancerForService = (serviceType) => async (req, res, next) => {
-    try {
-        // Get the IP with the lowest load
-        const ip = await getLowestLoadIP(serviceType);
-        const currentLoad = await incParam('load', ip);
-
-        // Check if the load exceeds the maximum limit
-        if (currentLoad >= CRTICAL_LOAD_PER_MIN) {
-            console.log(`ALERT: Load at ${ip} = ${currentLoad} req/min - has exceeded critical = ${CRTICAL_LOAD_PER_MIN} req/min`)
-        }
-
-        // Attach selected IP to the request for use in the route handler
-        req.serviceIP = ip;
-
-        next();
-    } catch (error) {
-        if (error.message === `No ${serviceType} instances available`)
-        {
-            res.status(503).json({detail: error.message + "."});
-        } else {
-            console.error(`Failed load balancing for ${serviceType}:`, error);
-            res.status(500).json({ detail: "Gateway error." });
-        }
-    }
-};
-
 // Fetch service IPs from Redis
 async function getServiceIPs(serviceType) {
     const redisKey = `service:${serviceType}`;
@@ -148,125 +74,176 @@ async function removeServiceIP(serviceType, ip) {
     await redisClient.lRem(redisKey, 0, ip);
 }
 
+// Helper funciton for handling load
+async function handleLoad(serviceType, ip) {
+    const currentLoad = await getParam('load', ip);
+    if (currentLoad > 0) {
+        await incParam('load', ip);
+    } else {
+        await redisClient.set(`load:${ip}`, 1, 'EX', 1);
+    }
+
+    if (currentLoad + 1 >= CRTICAL_LOAD_PER_MIN) {
+        console.log(`ALERT: Instance ${serviceType}:${ip} experiences load = ${currentLoad + 1} req/min (critical = ${CRTICAL_LOAD_PER_MIN} req/min)`);
+    }
+}
+
+// Helper function to make a request to a service instance with retries
+async function tryInstanceWithRetries(serviceType, ip, method, enpoint, body, headers) {
+    let attempts = 0;
+    let lastError;
+
+    while (attempts < CONSEC_FAILURES_THRESHOLD) {
+        attempts++;
+        handleLoad(serviceType, ip);
+        console.log(`LOG: Attempt ${attempts}/${CONSEC_FAILURES_THRESHOLD} for ${serviceType}:${ip} ${method} /${enpoint}`);
+        const fullUrl = `http://${ip}:${SERV_REST_PORT}/${enpoint}`;
+
+        try {
+            const response = await axios({
+                method,
+                url: fullUrl,
+                data: body,
+                headers,
+                timeout: REQUEST_TIMEOUT_MS,
+            });
+            return { success: true, response };
+        } catch (error) {
+            lastError = error;
+
+            if (error.code === 'ECONNABORTED') {
+                console.log(`FAILURE TIMEOUT: ${method} | ${fullUrl} - no response in ${REQUEST_TIMEOUT_MS} ms`);
+            } else if (error.response?.status >= 500) {
+                console.log(`FAILURE 5XX RESPONSE: ${method} | ${fullUrl}`);
+            } else if (error.response?.status >= 400) {
+                // Don't retry client errors
+                return { success: false, error, fatal: true };
+            }
+            
+            if (attempts === CONSEC_FAILURES_THRESHOLD) {
+                console.log(`INSTANCE FAILURE: Instance ${serviceType}:${ip} failed all ${CONSEC_FAILURES_THRESHOLD} attempts`);
+                return { success: false, error };
+            }
+        }
+    }
+
+    return { success: false, error: lastError };
+}
+
+// Main request handler
+async function handleServiceRequest(serviceType, method, endpoint, body, headers) {
+    const serviceIPs = await getServiceIPs(serviceType);
+    
+    if (serviceIPs.length === 0) {
+        throw new Error(`No ${serviceType} instances available.`);
+    }
+
+    // Sort instances by current load
+    const instancesWithLoad = await Promise.all(
+        serviceIPs.map(async ip => ({
+            ip,
+            load: await getParam('tasks', ip)
+        }))
+    );
+    
+    // Can comment this out to demonstrate how requests are passed from one busy instance to another
+    // until they reach an available instance
+    instancesWithLoad.sort((a, b) => a.load - b.load);
+
+    // Try each instance in order of load
+    for (const { ip } of instancesWithLoad) {
+        // Check if instance can handle more tasks
+        const currentTasks = await getParam('tasks', ip);
+        if (currentTasks >= MAX_TASKS_PER_SERVICE) {
+            console.log(`ALERT: Instance ${serviceType}:${ip} is currently busy, trying next instance`);
+            continue;
+        }
+
+        // Track the task
+        await incParam('tasks', ip);
+        
+        try {
+            // Try this instance with retries
+            const result = await tryInstanceWithRetries(serviceType, ip, method, endpoint, body, headers);
+            
+            if (result.success) {
+                return result.response;
+            }
+            
+            // If it's a client error, don't try other instances
+            if (result.fatal) {
+                throw result.error;
+            }
+            
+            // Instance failed all retries, remove it and try next one
+            await removeServiceIP(serviceType, ip);
+            console.log(`LOG: s${serviceType}:${ip} discarded after failing all attempts`);
+            
+        } finally {
+            await decParam('tasks', ip);
+        }
+    }
+
+    console.log(`CLUSTER FAILURE: All ${serviceType} instances failed to handle the request.`);
+    throw new Error(`All ${serviceType} instances failed to handle the request.`);
+}
+
 // Status endpoint
 app.get('/ping', (req, res) => {
     res.status(202).json({ message: `API Gateway running at http://127.0.0.1:${PORT} is alive!` });
 });
 
-// Route to Service A
-app.use('/sA', loadBalancerForService('A'), taskLimiter, async (req, res, next) => {
-    const url = `http://${req.serviceIP}:${SERV_REST_PORT}/${req.url.slice(1)}`;
-    console.log(`${req.method} | /sA/${req.url.slice(1)} -> ${req.serviceIP}`);
-    const reqData = {
-        method: req.method,
-        url: url,
-        data: req.body,
-        headers: req.headers,
-        timeout: REQUEST_TIMEOUT_MS,
-    };
-
-    let attempt = 0;
-    let lastError;
-
-    // Circuit breaker (3 retries)
+// Route handlers
+app.use('/sA/:path(*)', async (req, res) => {
     try {
-        while (attempt < CONSEC_FAILURES_THRESHOLD) {
-            try {
-                const response = await axios(reqData);
-                return res.status(response.status).send(response.data); // Exit on success
-            } catch (error) {
-                lastError = error;
-
-                if (error.code === 'ECONNABORTED') {
-                    console.log(`TIMEOUT: ${req.method} | ${url} - no response in ${REQUEST_TIMEOUT_MS} ms`);
-                } else if (error.response && error.response.status >= 500 && error.response.status < 600) {
-                    console.log(`5XX RESPONSE: ${req.method} | ${url}`);
-                } else if (error.response && error.response.status >= 400 && error.response.status < 500) {
-                    // For 4XX errors, log and break the loop immediately
-                    console.log(`4XX RESPONSE: ${req.method} | ${url}`);
-                    break; // Exit the loop without retrying
-                }
-                attempt++;
-            }
+        const response = await handleServiceRequest(
+            'A',
+            req.method,
+            req.params.path + req.url.slice(1),
+            req.body,
+            req.headers
+        );
+        res.status(response.status).send(response.data);
+    } catch (error) {
+        if (error.response?.status) {
+            res.status(error.response.status).json({ 
+                detail: error.response.data?.detail || error.message 
+            });
+        } else {
+            res.status(500).json({ 
+                detail: error.message === `timeout of ${REQUEST_TIMEOUT_MS}ms exceeded` 
+                    ? "Request timed out." 
+                    : error.message 
+            });
         }
-
-        // After exhausting retries, handle the last error if it exists
-        if (lastError) {
-            if (attempt == CONSEC_FAILURES_THRESHOLD) {
-                console.log(`LOG: ${req.method} | ${url} - failed after ${CONSEC_FAILURES_THRESHOLD} attempts`);
-                await removeServiceIP('A', req.serviceIP);
-                console.log(`LOG: sA:${req.serviceIP} discarded`);
-            }
-
-            if (lastError.message === `timeout of ${REQUEST_TIMEOUT_MS}ms exceeded`) {
-                lastError.message = "Request timed out.";
-            }
-
-            return res.status(lastError.response?.status || 500).json({ detail: lastError.response?.data?.detail || lastError.message });
-        }
-    } finally {
-        // Always decrement the task counter, whether success or failure
-        await decParam('tasks', req.serviceIP);
     }
 });
 
-// Route to Service B
-app.use('/sB', loadBalancerForService('B'), taskLimiter, async (req, res, next) => {
-    const url = `http://${req.serviceIP}:${SERV_REST_PORT}/${req.url.slice(1)}`;
-    console.log(`${req.method} | /sB/${req.url.slice(1)} -> ${req.serviceIP}`);
-    const reqData = {
-        method: req.method,
-        url: url,
-        data: req.body,
-        headers: req.headers,
-        timeout: REQUEST_TIMEOUT_MS,
-    };
-
-    let attempt = 0;
-    let lastError;
-
-    // Circuit breaker (3 retries)
+app.use('/sB/:path(*)', async (req, res) => {
     try {
-        while (attempt < CONSEC_FAILURES_THRESHOLD) {
-            try {
-                const response = await axios(reqData);
-                return res.status(response.status).send(response.data); // Exit on success
-            } catch (error) {
-                lastError = error;
-
-                if (error.code === 'ECONNABORTED') {
-                    console.log(`TIMEOUT: ${req.method} | ${url} - no response in ${REQUEST_TIMEOUT_MS} ms`);
-                } else if (error.response && error.response.status >= 500 && error.response.status < 600) {
-                    console.log(`5XX RESPONSE: ${req.method} | ${url}`);
-                } else if (error.response && error.response.status >= 400 && error.response.status < 500) {
-                    // For 4XX errors, log and break the loop immediately
-                    console.log(`4XX RESPONSE: ${req.method} | ${url}`);
-                    break; // Exit the loop without retrying
-                }
-                attempt++;
-            }
+        const response = await handleServiceRequest(
+            'B',
+            req.method,
+            req.params.path + req.url.slice(1),
+            req.body,
+            req.headers
+        );
+        res.status(response.status).send(response.data);
+    } catch (error) {
+        if (error.response?.status) {
+            res.status(error.response.status).json({ 
+                detail: error.response.data?.detail || error.message 
+            });
+        } else {
+            res.status(500).json({ 
+                detail: error.message === `timeout of ${REQUEST_TIMEOUT_MS}ms exceeded` 
+                    ? "Request timed out." 
+                    : error.message 
+            });
         }
-
-        // After exhausting retries, handle the last error if it exists
-        if (lastError) {
-            if (attempt == CONSEC_FAILURES_THRESHOLD) {
-                console.log(`LOG: ${req.method} | ${url} - failed after ${CONSEC_FAILURES_THRESHOLD} attempts`);
-                await removeServiceIP('B', req.serviceIP);
-                console.log(`LOG: sB:${req.serviceIP} discarded`);
-            }
-
-            if (lastError.message === `timeout of ${REQUEST_TIMEOUT_MS}ms exceeded`) {
-                lastError.message = "Request timed out.";
-            }
-
-            return res.status(lastError.response?.status || 500).json({ detail: lastError.response?.data?.detail || lastError.message });
-        }
-    } finally {
-        // Always decrement the task counter, whether success or failure
-        await decParam('tasks', req.serviceIP);
     }
 });
 
 app.listen(PORT, () => {
-    console.log(`API Gateway listening at http://127.0.0.1:${PORT}`);
+    console.log(`LOG: API Gateway listening at http://127.0.0.1:${PORT}`);
 });

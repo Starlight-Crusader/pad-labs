@@ -43,6 +43,7 @@ services:
       - SD_HOST=service-discovery
       - SD_PORT=50051
       - PORT=8000
+      - SLEEP_DURATION_S=10
     ports:
       - "8000:8000"
 
@@ -64,6 +65,7 @@ services:
       - SD_HOST=service-discovery
       - SD_PORT=50051
       - PORT=8001
+      - SLEEP_DURATION_S=10
     ports:
       - "8001:8000"
 
@@ -85,6 +87,7 @@ services:
       - SD_HOST=service-discovery
       - SD_PORT=50051
       - PORT=8002
+      - SLEEP_DURATION_S=10
     ports:
       - "8002:8000"
 

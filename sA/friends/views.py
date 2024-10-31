@@ -68,6 +68,14 @@ class OpenFriendRequestView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
+            # Check if a friend request already exists
+            existing_request = FriendRequest.objects.filter(sender=sender, receiver=receiver).first()
+            if existing_request:
+                return Response(
+                    {"detail": "Friend request already sent."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
             friend_request = FriendRequest.objects.create(sender=sender, receiver=receiver)
 
             return Response(
@@ -80,6 +88,7 @@ class OpenFriendRequestView(APIView):
                 {"detail": "One or both users not found."}, 
                 status=status.HTTP_404_NOT_FOUND
             )
+
         
 
 class FriendRequestDestroyView(generics.DestroyAPIView):
