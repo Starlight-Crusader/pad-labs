@@ -196,6 +196,7 @@ I am planning on expanding the system:
 ![Architecture](./pad_architecture_new.png)
 
 1. Implement **read replication** for user data by setting up two dedicated read replicas to distribute and balance query load.
-2. Employ a **Two-Phase Commit (2PC)** mechanism, managed by a Transaction Coordinator within the API Gateway, to ensure safe and atomic deletion of user data, removing all associated records and deregistering the user from any lobbies they participated in.
+2. Employ a **Two-Phase Commit (2PC)** and **Long-running Transactions** mechanisms, managed by a Transaction Coordinator within the API Gateway, to ensure safe and atomic deletion of user data, removing all associated records and deregistering the user from any lobbies they participated in.
 3. Integrate a **Data Warehouse** to enable comprehensive analysis of user performance, supporting strategic insights and metrics.
 4. Deploy the **ELK stack** to centralize and process logs across all system instances, enhancing monitoring and troubleshooting capabilities.
+5. Deploy a Redis cluster to enable sharded caching of user data using **consistent hashing**.
