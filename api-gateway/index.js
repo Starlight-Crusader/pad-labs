@@ -1,9 +1,9 @@
 const express = require('express');
 const axios = require('axios');
 const { createClient } = require('redis');
-const app = express();
+const winston = require('winston');
 
-// Load environment variables
+const app = express();
 require('dotenv').config();
 
 const PORT = process.env.PORT || 8080;
@@ -17,6 +17,28 @@ const CRTICAL_LOAD_PER_MIN = process.env.CRTICAL_LOAD_PER_MIN || 10;
 const MAX_RETRIES = process.env.MAX_RETRIES || 3;
 const MAX_REDIRECTS = process.env.MAX_REDIRECTS || 3;
 
+const LOGSTASH_HOST = process.env.LOGSTASH_HOST || "logstash";
+const LOGSTASH_HTTP_PORT = process.env.LOGSTASH_HTTP_PORT || 6000;
+
+// Initialize Winston logger
+const logger = winston.createLogger({
+    transports: [
+        new winston.transports.Console(),
+        new winston.transports.Http({
+            host: LOGSTASH_HOST,
+            port: LOGSTASH_HTTP_PORT,
+            level: 'info',
+        })
+    ],
+});
+
+function logMsg(msg) {
+    logger.info(JSON.stringify({
+        "service": "api_gateway",
+        "msg": msg
+    }));
+}
+
 // JSON body parsing
 app.use(express.json());
 
@@ -27,9 +49,11 @@ redisClient.connect().catch(console.error);
 // Cleanly close Redis connection and server on shutdown - Gracefull Shutdown
 async function shutdown(signal) {
     console.log(`LOG: Received ${signal}. Closing Redis and HTTP server...`);
+    logMsg(`LOG: Received ${signal}. Closing Redis and HTTP server...`);
     await redisClient.quit();
     server.close(() => {
         console.log('LOG: Express server closed');
+        logMsg('LOG: Express server closed');
         process.exit(0);
     });
 }
@@ -86,6 +110,7 @@ async function handleLoad(serviceType, ip) {
 
     if (currentLoad + 1 >= CRTICAL_LOAD_PER_MIN) {
         console.log(`ALERT: Instance ${serviceType}:${ip} experiences load = ${currentLoad + 1} req/min (critical = ${CRTICAL_LOAD_PER_MIN} req/min)`);
+        logMsg(`ALERT: Instance ${serviceType}:${ip} experiences load = ${currentLoad + 1} req/min (critical = ${CRTICAL_LOAD_PER_MIN} req/min)`);
     }
 }
 
@@ -98,6 +123,7 @@ async function tryInstanceWithRetries(serviceType, ip, method, enpoint, body, he
         attempts++;
         handleLoad(serviceType, ip);
         console.log(`LOG: Attempt ${attempts}/${MAX_RETRIES} for ${serviceType}:${ip} ${method} /${enpoint}`);
+        logMsg(`LOG: Attempt ${attempts}/${MAX_RETRIES} for ${serviceType}:${ip} ${method} /${enpoint}`);
         const fullUrl = `http://${ip}:${SERV_REST_PORT}/${enpoint}`;
 
         try {
@@ -114,8 +140,10 @@ async function tryInstanceWithRetries(serviceType, ip, method, enpoint, body, he
 
             if (error.code === 'ECONNABORTED') {
                 console.log(`FAILURE TIMEOUT: ${method} | ${fullUrl} - no response in ${REQUEST_TIMEOUT_MS} ms!`);
+                logMsg(`FAILURE TIMEOUT: ${method} | ${fullUrl} - no response in ${REQUEST_TIMEOUT_MS} ms!`);
             } else if (error.response?.status >= 500) {
                 console.log(`FAILURE 5XX RESPONSE: ${method} | ${fullUrl}!`);
+                logMsg(`FAILURE 5XX RESPONSE: ${method} | ${fullUrl}!`);
             } else if (error.response?.status >= 400) {
                 // Don't retry client errors
                 return { success: false, error, fatal: true };
@@ -123,6 +151,7 @@ async function tryInstanceWithRetries(serviceType, ip, method, enpoint, body, he
             
             if (attempts === MAX_RETRIES) {
                 console.log(`INSTANCE FAILURE: Instance ${serviceType}:${ip} failed all ${MAX_RETRIES} attempts!`);
+                logMsg(`INSTANCE FAILURE: Instance ${serviceType}:${ip} failed all ${MAX_RETRIES} attempts!`);
                 return { success: false, error };
             }
         }
@@ -157,6 +186,7 @@ async function handleServiceRequest(serviceType, method, endpoint, body, headers
         const currentTasks = await getParam('tasks', ip);
         if (currentTasks >= MAX_TASKS_PER_SERVICE) {
             console.log(`ALERT: Instance ${serviceType}:${ip} is currently busy, trying next instance`);
+            logMsg(`ALERT: Instance ${serviceType}:${ip} is currently busy, trying next instance`);
             continue;
         }
 
@@ -179,6 +209,7 @@ async function handleServiceRequest(serviceType, method, endpoint, body, headers
             // Instance failed all retries, remove it and try next one
             await removeServiceIP(serviceType, ip);
             console.log(`LOG: s${serviceType}:${ip} discarded after failing all attempts`);
+            logMsg(`LOG: s${serviceType}:${ip} discarded after failing all attempts`);
 
         } finally {
             await decParam('tasks', ip);
@@ -186,6 +217,7 @@ async function handleServiceRequest(serviceType, method, endpoint, body, headers
     }
 
     console.log(`CLUSTER FAILURE: ${MAX_REDIRECTS} least busy ${serviceType} instances failed to handle the request!`);
+    logMsg(`CLUSTER FAILURE: ${MAX_REDIRECTS} least busy ${serviceType} instances failed to handle the request!`);
     throw new Error(`${MAX_REDIRECTS} least busy ${serviceType} instances failed to handle the request.`);
 }
 
@@ -247,4 +279,5 @@ app.use('/sB/:path(*)', async (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`LOG: API Gateway listening at http://127.0.0.1:${PORT}`);
+    logMsg(`LOG: API Gateway listening at http://127.0.0.1:${PORT}`);
 });
