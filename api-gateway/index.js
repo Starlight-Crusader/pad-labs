@@ -14,7 +14,8 @@ const SM_REDIS_URL = process.env.SM_REDIS_URL || "redis://sm_redis:6379";
 const MAX_TASKS_PER_SERVICE = process.env.MAX_TASKS_PER_SERVICE || 1;
 const REQUEST_TIMEOUT_MS = process.env.REQUEST_TIMEOUT_MS || 4000;
 const CRTICAL_LOAD_PER_MIN = process.env.CRTICAL_LOAD_PER_MIN || 10;
-const CONSEC_FAILURES_THRESHOLD = process.env.CONSEC_FAILURES_THRESHOLD || 3;
+const MAX_RETRIES = process.env.MAX_RETRIES || 3;
+const MAX_REDIRECTS = process.env.MAX_REDIRECTS || 3;
 
 // JSON body parsing
 app.use(express.json());
@@ -93,10 +94,10 @@ async function tryInstanceWithRetries(serviceType, ip, method, enpoint, body, he
     let attempts = 0;
     let lastError;
 
-    while (attempts < CONSEC_FAILURES_THRESHOLD) {
+    while (attempts < MAX_RETRIES) {
         attempts++;
         handleLoad(serviceType, ip);
-        console.log(`LOG: Attempt ${attempts}/${CONSEC_FAILURES_THRESHOLD} for ${serviceType}:${ip} ${method} /${enpoint}`);
+        console.log(`LOG: Attempt ${attempts}/${MAX_RETRIES} for ${serviceType}:${ip} ${method} /${enpoint}`);
         const fullUrl = `http://${ip}:${SERV_REST_PORT}/${enpoint}`;
 
         try {
@@ -112,16 +113,16 @@ async function tryInstanceWithRetries(serviceType, ip, method, enpoint, body, he
             lastError = error;
 
             if (error.code === 'ECONNABORTED') {
-                console.log(`FAILURE TIMEOUT: ${method} | ${fullUrl} - no response in ${REQUEST_TIMEOUT_MS} ms`);
+                console.log(`FAILURE TIMEOUT: ${method} | ${fullUrl} - no response in ${REQUEST_TIMEOUT_MS} ms!`);
             } else if (error.response?.status >= 500) {
-                console.log(`FAILURE 5XX RESPONSE: ${method} | ${fullUrl}`);
+                console.log(`FAILURE 5XX RESPONSE: ${method} | ${fullUrl}!`);
             } else if (error.response?.status >= 400) {
                 // Don't retry client errors
                 return { success: false, error, fatal: true };
             }
             
-            if (attempts === CONSEC_FAILURES_THRESHOLD) {
-                console.log(`INSTANCE FAILURE: Instance ${serviceType}:${ip} failed all ${CONSEC_FAILURES_THRESHOLD} attempts`);
+            if (attempts === MAX_RETRIES) {
+                console.log(`INSTANCE FAILURE: Instance ${serviceType}:${ip} failed all ${MAX_RETRIES} attempts!`);
                 return { success: false, error };
             }
         }
@@ -133,7 +134,7 @@ async function tryInstanceWithRetries(serviceType, ip, method, enpoint, body, he
 // Main request handler
 async function handleServiceRequest(serviceType, method, endpoint, body, headers) {
     const serviceIPs = await getServiceIPs(serviceType);
-    
+
     if (serviceIPs.length === 0) {
         throw new Error(`No ${serviceType} instances available.`);
     }
@@ -145,13 +146,13 @@ async function handleServiceRequest(serviceType, method, endpoint, body, headers
             load: await getParam('tasks', ip)
         }))
     );
-    
+
     // Can comment this out to demonstrate how requests are passed from one busy instance to another
     // until they reach an available instance
-    instancesWithLoad.sort((a, b) => a.load - b.load);
+    // instancesWithLoad.sort((a, b) => a.load - b.load);
 
     // Try each instance in order of load
-    for (const { ip } of instancesWithLoad) {
+    for (const { ip } of instancesWithLoad.slice(0, MAX_REDIRECTS)) {
         // Check if instance can handle more tasks
         const currentTasks = await getParam('tasks', ip);
         if (currentTasks >= MAX_TASKS_PER_SERVICE) {
@@ -161,31 +162,31 @@ async function handleServiceRequest(serviceType, method, endpoint, body, headers
 
         // Track the task
         await incParam('tasks', ip);
-        
+
         try {
             // Try this instance with retries
             const result = await tryInstanceWithRetries(serviceType, ip, method, endpoint, body, headers);
-            
+
             if (result.success) {
                 return result.response;
             }
-            
+
             // If it's a client error, don't try other instances
             if (result.fatal) {
                 throw result.error;
             }
-            
+
             // Instance failed all retries, remove it and try next one
             await removeServiceIP(serviceType, ip);
             console.log(`LOG: s${serviceType}:${ip} discarded after failing all attempts`);
-            
+
         } finally {
             await decParam('tasks', ip);
         }
     }
 
-    console.log(`CLUSTER FAILURE: All ${serviceType} instances failed to handle the request.`);
-    throw new Error(`All ${serviceType} instances failed to handle the request.`);
+    console.log(`CLUSTER FAILURE: ${MAX_REDIRECTS} least busy ${serviceType} instances failed to handle the request!`);
+    throw new Error(`${MAX_REDIRECTS} least busy ${serviceType} instances failed to handle the request.`);
 }
 
 // Status endpoint

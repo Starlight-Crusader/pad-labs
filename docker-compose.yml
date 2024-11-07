@@ -169,10 +169,11 @@ services:
       - PORT=8080
       - SM_REDIS_URL=redis://sm_redis:6379
       - SERV_REST_PORT=8000
-      - REQUEST_TIMEOUT_MS=9000
+      - REQUEST_TIMEOUT_MS=2000
       - MAX_TASKS_PER_SERVICE=1
       - CRTICAL_LOAD_PER_MIN=5
-      - CONSEC_FAILURES_THRESHOLD=3
+      - MAX_RETRIES=3
+      - MAX_REDIRECTS=3
     ports:
       - "8080:8080"
     depends_on:
