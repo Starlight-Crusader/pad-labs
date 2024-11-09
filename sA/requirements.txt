@@ -1,4 +1,6 @@
 asgiref==3.8.1
+certifi==2024.8.30
+charset-normalizer==3.4.0
 dj-database-url==2.2.0
 Django==5.1.1
 django-filter==24.3
@@ -7,13 +9,14 @@ djangorestframework-simplejwt==5.3.1
 grpcio==1.66.1
 grpcio-tools==1.66.1
 gunicorn==23.0.0
+idna==3.10
 packaging==24.1
 protobuf==5.28.2
 psycopg2-binary==2.9.9
 PyJWT==2.9.0
-python-json-logger==2.0.7
-python-logstash==0.4.8
+requests==2.32.3
 setuptools==75.1.0
 sqlparse==0.5.1
 typing_extensions==4.12.2
 tzdata==2024.1
+urllib3==2.2.3

@@ -32,6 +32,7 @@ const logger = winston.createLogger({
     ],
 });
 
+// Quick logs
 function logMsg(msg) {
     logger.info(JSON.stringify({
         "service": "api_gateway",
