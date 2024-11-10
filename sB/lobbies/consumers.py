@@ -1,11 +1,8 @@
 import os
 import requests
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
-from rest_framework.exceptions import PermissionDenied
 from channels.db import database_sync_to_async
-from django.core.cache import cache
-from sB.utilities import get_timeout_from_token
-import asyncio
+from sB.utilities import get_timeout_from_token, cache_get, cache_set
 
 
 class LobbyConsumer(AsyncJsonWebsocketConsumer):
@@ -114,7 +111,7 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
     async def validate_token_and_fetch_user_data(self, full_token_str):
         token = full_token_str.split(' ')[1]
 
-        cached_user_data = cache.get(token + "_user_data")
+        cached_user_data = cache_get(token + "_user_data")
         if cached_user_data:
             print(f"Using cached data for user #{cached_user_data.get('id')}")
             self.scope['user_data'] = cached_user_data
@@ -140,7 +137,7 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
         timeout = get_timeout_from_token(token)
 
         if timeout is not None:
-            cache.set(token + "_user_data", user_data, timeout=timeout)
+            cache_set(token + "_user_data", user_data, timeout=timeout)
             print(f"Cached data for user #{user_data.get('id')}")
     
     async def is_player_in_lobby(self, user_id):

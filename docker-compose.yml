@@ -122,6 +122,9 @@ services:
       - SD_PORT=50051
       - PORT=8003
       - LOGGING=0
+      - UD_CACHE_HOST_1=ud_cache_cluster_redis_1
+      - UD_CACHE_HOST_2=ud_cache_cluster_redis_2
+      - UD_CACHE_HOST_3=ud_cache_cluster_redis_3
     ports:
       - "8003:8000"
     networks:
@@ -146,6 +149,9 @@ services:
       - SD_PORT=50051
       - PORT=8004
       - LOGGING=0
+      - UD_CACHE_HOST_1=ud_cache_cluster_redis_1
+      - UD_CACHE_HOST_2=ud_cache_cluster_redis_2
+      - UD_CACHE_HOST_3=ud_cache_cluster_redis_3
     ports:
       - "8004:8000"
     networks:
@@ -169,6 +175,10 @@ services:
   #     - SD_HOST=service-discovery
   #     - SD_PORT=50051
   #     - PORT=8005
+  #     - LOGGING=0
+  #     - UD_CACHE_HOST_1=ud_cache_cluster_redis_1
+  #     - UD_CACHE_HOST_2=ud_cache_cluster_redis_2
+  #     - UD_CACHE_HOST_3=ud_cache_cluster_redis_3
   #   ports:
   #     - "8005:8000"
   #   networks:
@@ -178,7 +188,7 @@ services:
     image: redis:latest
     container_name: sm_redis
     ports:
-      - "6380:6379"
+      - "6379:6379"
     command: redis-server --save "" --appendonly no
     networks:
       - pad-network
@@ -220,6 +230,33 @@ services:
       - pad-network
     volumes:
       - service_discovery-data:/app/logs
+  
+  ud_cache_cluster_redis_1:
+    image: redis:latest
+    container_name: ud_cache_cluster_redis_1
+    ports:
+      - "6380:6379"
+    command: redis-server --save "" --appendonly no
+    networks:
+      - pad-network
+
+  ud_cache_cluster_redis_2:
+    image: redis:latest
+    container_name: ud_cache_cluster_redis_2
+    ports:
+      - "6381:6379"
+    command: redis-server --save "" --appendonly no
+    networks:
+      - pad-network
+
+  ud_cache_cluster_redis_3:
+    image: redis:latest
+    container_name: ud_cache_cluster_redis_3
+    ports:
+      - "6382:6379"
+    command: redis-server --save "" --appendonly no
+    networks:
+      - pad-network
   
   # elasticsearch:
   #   image: docker.elastic.co/elasticsearch/elasticsearch:7.14.0

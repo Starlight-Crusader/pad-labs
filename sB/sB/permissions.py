@@ -2,8 +2,7 @@ from rest_framework.permissions import BasePermission
 from rest_framework.exceptions import PermissionDenied
 import os
 import requests
-from django.core.cache import cache
-from .utilities import get_timeout_from_token
+from .utilities import get_timeout_from_token, cache_get, cache_set
 
 
 class ProvidesValidRootPassword(BasePermission):
@@ -40,9 +39,9 @@ class ValidateTokenWithServiceA(BasePermission):
         token = full_token_str.split(' ')[1]
 
         # Check the cache first
-        cached_user_data = cache.get(token + "_user_data")
+        cached_user_data = cache_get(token + "_user_data")
         if cached_user_data:
-            print(f"Using cached basic user info for user#{cached_user_data.get('id')}")
+            print(f"LOG: Using cached basic user info for user#{cached_user_data.get('id')}")
             return cached_user_data
 
         try:
@@ -68,5 +67,5 @@ class ValidateTokenWithServiceA(BasePermission):
         timeout = get_timeout_from_token(token)
 
         if timeout is not None:
-            cache.set(token + "_user_data", user_data, timeout=timeout)
-            print(f"Cached basic user info for user#{user_data.get('id')}")
+            cache_set(token + "_user_data", user_data, timeout=timeout)
+            print(f"LOG: Cached basic user info for user#{user_data.get('id')}")

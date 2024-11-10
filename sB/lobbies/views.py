@@ -7,8 +7,7 @@ from rest_framework.exceptions import ValidationError, NotFound
 from sB.permissions import ProvidesValidRootPassword, ValidateTokenWithServiceA
 import requests
 import os
-from django.core.cache import cache
-from sB.utilities import get_timeout_from_token
+from sB.utilities import get_timeout_from_token, cache_get, cache_set
 from rest_framework.exceptions import APIException
 
 
@@ -86,7 +85,7 @@ class DiscoverGamesyLobbiesWithFriendsView(generics.ListAPIView):
     def get_queryset(self):
         token = self.request.headers.get('Authorization').split(' ')[1]
 
-        cached_friends_ids = cache.get(token + "_friends_ids")
+        cached_friends_ids = cache_get(token + "_friends_ids")
         if cached_friends_ids is not None:
             print(f"Using cached friends IDs for token: {token}")
             friends_ids = cached_friends_ids
@@ -106,7 +105,7 @@ class DiscoverGamesyLobbiesWithFriendsView(generics.ListAPIView):
                 # Cache the friend IDs with the appropriate timeout
                 timeout = get_timeout_from_token(token)  # Use the timeout function
                 if timeout is not None:
-                    cache.set(token + "_friends_ids", friends_ids, timeout=timeout)
+                    cache_set(token + "_friends_ids", friends_ids, timeout=timeout)
                     print(f"Cached friends IDs for user token: {token}")
 
             else:
