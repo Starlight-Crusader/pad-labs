@@ -63,6 +63,7 @@ class LogstashMiddleware:
         else:
             log_info['msg'] = f"LOG: Request {request.method} : {request.path}"
 
-        logger.info(json.dumps(log_info))
+        if int(os.getenv('LOGGING')):
+            logger.info(json.dumps(log_info))
             
         return response

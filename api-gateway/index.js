@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const { createClient } = require('redis');
 const winston = require('winston');
+const fetch = require('node-fetch');
 
 const app = express();
 require('dotenv').config();
@@ -19,6 +20,8 @@ const MAX_REDIRECTS = process.env.MAX_REDIRECTS || 3;
 
 const LOGSTASH_HOST = process.env.LOGSTASH_HOST || "logstash";
 const LOGSTASH_HTTP_PORT = process.env.LOGSTASH_HTTP_PORT || 6000;
+
+const ROOT_PASS = process.env.ROOT_PASS;
 
 // Initialize Winston logger
 const logger = winston.createLogger({
@@ -275,6 +278,110 @@ app.use('/sB/:path(*)', async (req, res) => {
                     : error.message 
             });
         }
+    }
+});
+
+app.delete('/saga/full-user-removal', async (req, res) => {
+    
+    // Extract token from Authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'No valid auth. credentials were provided.' });
+    }
+
+    try {
+        // Step 1: Validate token and get user info
+        const validateResponse = await fetch('http://localhost:8080/sA/api/utilities/validate-token', {
+            method: 'GET',
+            headers: {
+                'X-Root-Password': ROOT_PASS,
+                'Authorization': authHeader
+            }
+        });
+        
+        if (!validateResponse.ok) {
+            throw new Error('Token validation failed');
+        }
+        
+        const userData = await validateResponse.json();
+        const { id, username, rating } = userData;
+        
+        // Step 2: Delete user's game records
+        const deleteRecordsResponse = await fetch(
+            `http://localhost:8080/sB/api/records/user-delete?username=${encodeURIComponent(username)}`,
+            {
+                method: 'DELETE',
+                headers: {
+                    'X-Root-Password': ROOT_PASS
+                }
+            }
+        );
+        
+        if (!deleteRecordsResponse.ok) {
+            throw new Error('Failed to delete user records');
+        }
+        
+        const deletedData = await deleteRecordsResponse.json();
+        const deletedRecords = deletedData.deleted_records;
+        
+        // Step 3: Delete user account
+        try {
+            const deleteUserResponse = await fetch(
+                `http://localhost:8080/sA/api/users/${id}/destroy`,
+                {
+                    method: 'DELETE',
+                    headers: {
+                        'X-Root-Password': ROOT_PASS
+                    }
+                }
+            );
+            
+            if (!deleteUserResponse.ok) {
+                throw new Error('Failed to delete user account');
+            }
+            
+            // Success - return confirmation
+            return res.status(200).json({
+                message: 'All data associated with the user removed.'
+            });
+            
+        } catch (userDeletionError) {
+            // Rollback: Restore deleted records
+            const rollbackRecords = deletedRecords.map(record => {
+                const { id, ...recordWithoutId } = record;
+                return recordWithoutId;
+            });
+            
+            // Attempt rollback
+            const rollbackResponse = await fetch('http://localhost:8080/sB/api/records/save', {
+                method: 'POST',
+                headers: {
+                    'X-Root-Password': ROOT_PASS,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(rollbackRecords)
+            });
+            
+            if (!rollbackResponse.ok) {
+                // Critical error: Rollback failed
+                return res.status(500).json({
+                    error: 'Critical error: User deletion failed and rollback failed.',
+                    details: userDeletionError.message,
+                    rollbackError: 'Failed to restore the data deleted in the first phase.'
+                });
+            }
+            
+            // Rollback succeeded but original operation failed
+            return res.status(500).json({
+                error: 'User deletion failed - records have been restored.',
+                details: userDeletionError.message
+            });
+        }
+    } catch (error) {
+        return res.status(500).json({
+            error: 'Saga transaction failed.',
+            details: error.message + '.'
+        });
     }
 });
 

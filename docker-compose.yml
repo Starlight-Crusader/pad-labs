@@ -48,6 +48,7 @@ services:
       - SD_PORT=50051
       - PORT=8000
       - SLEEP_DURATION_S=10
+      - LOGGING=0
     ports:
       - "8000:8000"
     networks:
@@ -72,6 +73,7 @@ services:
       - SD_PORT=50051
       - PORT=8001
       - SLEEP_DURATION_S=10
+      - LOGGING=0
     ports:
       - "8001:8000"
     networks:
@@ -119,33 +121,35 @@ services:
       - SD_HOST=service-discovery
       - SD_PORT=50051
       - PORT=8003
+      - LOGGING=0
     ports:
       - "8003:8000"
     networks:
       - pad-network
 
-  # service-b-2:
-  #   container_name: service-b-2
-  #   build:
-  #     context: ./sB
-  #   entrypoint: ["./entrypoint.sh"]
-  #   volumes:
-  #     - ./sB:/app
-  #   depends_on:
-  #     - postgres_b
-  #     - api-gateway
-  #   environment:
-  #     - DJANGO_SETTINGS_MODULE=sB.settings
-  #     - DATABASE_URL=postgres://service_b_user:service_b_password@postgres_b:5432/service_b_db
-  #     - API_GATEWAY_BASE_URL=http://api-gateway:8080/
-  #     - SERVICE_TYPE=B
-  #     - SD_HOST=service-discovery
-  #     - SD_PORT=50051
-  #     - PORT=8004
-  #   ports:
-  #     - "8004:8000"
-  #   networks:
-  #     - pad-network
+  service-b-2:
+    container_name: service-b-2
+    build:
+      context: ./sB
+    entrypoint: ["./entrypoint.sh"]
+    volumes:
+      - ./sB:/app
+    depends_on:
+      - postgres_b
+      - api-gateway
+    environment:
+      - DJANGO_SETTINGS_MODULE=sB.settings
+      - DATABASE_URL=postgres://service_b_user:service_b_password@postgres_b:5432/service_b_db
+      - API_GATEWAY_BASE_URL=http://api-gateway:8080/
+      - SERVICE_TYPE=B
+      - SD_HOST=service-discovery
+      - SD_PORT=50051
+      - PORT=8004
+      - LOGGING=0
+    ports:
+      - "8004:8000"
+    networks:
+      - pad-network
 
   # service-b-3:
   #   container_name: service-b-3
@@ -187,7 +191,7 @@ services:
       - PORT=8080
       - SM_REDIS_URL=redis://sm_redis:6379
       - SERV_REST_PORT=8000
-      - REQUEST_TIMEOUT_MS=2000
+      - REQUEST_TIMEOUT_MS=5000
       - MAX_TASKS_PER_SERVICE=1
       - CRTICAL_LOAD_PER_MIN=5
       - MAX_RETRIES=3
@@ -217,67 +221,67 @@ services:
     volumes:
       - service_discovery-data:/app/logs
   
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.14.0
-    container_name: elasticsearch
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    networks:
-      - pad-network
-    volumes:
-      - elasticsearch-data:/usr/share/elasticsearch/data
+  # elasticsearch:
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:7.14.0
+  #   container_name: elasticsearch
+  #   environment:
+  #     - discovery.type=single-node
+  #     - xpack.security.enabled=false
+  #     - bootstrap.memory_lock=true
+  #     - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+  #   ulimits:
+  #     memlock:
+  #       soft: -1
+  #       hard: -1
+  #   ports:
+  #     - "9200:9200"
+  #     - "9300:9300"
+  #   networks:
+  #     - pad-network
+  #   volumes:
+  #     - elasticsearch-data:/usr/share/elasticsearch/data
 
-  logstash:
-    image: docker.elastic.co/logstash/logstash:7.14.0
-    container_name: logstash
-    ports:
-      - "5000:5000"
-      - "9600:9600"
-    networks:
-      - pad-network
-    volumes:
-      - ./config/logstash/pipeline:/usr/share/logstash/pipeline
-    depends_on:
-      - elasticsearch
+  # logstash:
+  #   image: docker.elastic.co/logstash/logstash:7.14.0
+  #   container_name: logstash
+  #   ports:
+  #     - "5000:5000"
+  #     - "9600:9600"
+  #   networks:
+  #     - pad-network
+  #   volumes:
+  #     - ./config/logstash/pipeline:/usr/share/logstash/pipeline
+  #   depends_on:
+  #     - elasticsearch
 
-  kibana:
-    image: docker.elastic.co/kibana/kibana:7.14.0
-    container_name: kibana
-    environment:
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
-    ports:
-      - "5601:5601"
-    networks:
-      - pad-network
-    depends_on:
-      - elasticsearch
+  # kibana:
+  #   image: docker.elastic.co/kibana/kibana:7.14.0
+  #   container_name: kibana
+  #   environment:
+  #     - ELASTICSEARCH_URL=http://elasticsearch:9200
+  #   ports:
+  #     - "5601:5601"
+  #   networks:
+  #     - pad-network
+  #   depends_on:
+  #     - elasticsearch
 
-  filebeat:
-    image: docker.elastic.co/beats/filebeat:8.15.3
-    container_name: filebeat
-    command: ["filebeat", "-e", "-strict.perms=false"]
-    networks:
-      - pad-network
-    volumes:
-      - ./config/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
-      - service_discovery-data:/usr/share/filebeat/data
-    depends_on:
-      - logstash
+  # filebeat:
+  #   image: docker.elastic.co/beats/filebeat:8.15.3
+  #   container_name: filebeat
+  #   command: ["filebeat", "-e", "-strict.perms=false"]
+  #   networks:
+  #     - pad-network
+  #   volumes:
+  #     - ./config/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
+  #     - service_discovery-data:/usr/share/filebeat/data
+  #   depends_on:
+  #     - logstash
 
 volumes:
   postgres_data_a:
   postgres_data_b:
-  elasticsearch-data:
+  # elasticsearch-data:
   service_discovery-data:
 
 networks:

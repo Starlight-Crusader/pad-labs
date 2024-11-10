@@ -8,7 +8,7 @@ class GameRecord(models.Model):
 
     moves = ArrayField(models.CharField(max_length=10))
 
-    finished_at = models.DateTimeField(auto_now_add=True)
+    finished_at = models.DateTimeField()
 
     def __str__(self):
         return f"Game between player #{self.white_player} and player #{self.black_player} finished on {self.finished_at}"

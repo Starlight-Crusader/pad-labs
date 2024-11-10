@@ -24,12 +24,12 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
             return
 
         # Validate the JWT token
-        if not await self.validate_token(token):
+        if not await self.validate_token_and_fetch_user_data(token):
             await self.send_error("Invalid auth. credentials.")
             await self.close()
             return
 
-        self.user_id = self.scope['basic_user_info']['id']
+        self.user_id = self.scope['user_data']['id']
 
         # Check if connecting user is registered to be in the lobby
         if not (await self.is_player_in_lobby(self.user_id) or await self.is_spectator_in_lobby(self.user_id)):
@@ -48,7 +48,7 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
             self.room_group_name,
             {
                 'type': 'chat_message',
-                'message': f'{self.scope['basic_user_info']['username']} has joined the lobby.'
+                'message': f'{self.scope['user_data']['username']} has joined the lobby.'
             }
         )
 
@@ -58,11 +58,11 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
                 self.room_group_name,
                 {
                     'type': 'chat_message',
-                    'message': f'{self.scope['basic_user_info']['username']} has disconnected.'
+                    'message': f'{self.scope['user_data']['username']} has disconnected.'
                 }
             )
 
-            user_id = self.scope['basic_user_info']['id']
+            user_id = self.scope['user_data']['id']
 
             # Leave lobby group
             await self.channel_layer.group_discard(
@@ -87,7 +87,7 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
             self.room_group_name,
             {
                 'type': type,
-                'message': f"{self.scope['basic_user_info']['username']}: {message}"
+                'message': f"{self.scope['user_data']['username']}: {message}"
             }
         )
 
@@ -111,13 +111,13 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
             'message': message
         })
 
-    async def validate_token(self, full_token_str):
+    async def validate_token_and_fetch_user_data(self, full_token_str):
         token = full_token_str.split(' ')[1]
 
-        cached_user_info = cache.get(token + "_basic_user_info")
-        if cached_user_info:
-            print("Using cached basic user info")
-            self.scope['basic_user_info'] = cached_user_info
+        cached_user_data = cache.get(token + "_user_data")
+        if cached_user_data:
+            print(f"Using cached data for user #{cached_user_data.get('id')}")
+            self.scope['user_data'] = cached_user_data
             return True
 
         try:
@@ -127,21 +127,21 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
             })
             
             if response.status_code == 200:
-                basic_user_info = response.json()
-                self.scope['basic_user_info'] = basic_user_info
-                self.cache_basic_user_info(token, basic_user_info)
+                user_data = response.json()
+                self.scope['user_data'] = user_data
+                self.cache_user_data(token, user_data)
                 return True
         except requests.RequestException:
             return False
         
         return False
     
-    def cache_basic_user_info(self, token, basic_user_info):
+    def cache_user_data(self, token, user_data):
         timeout = get_timeout_from_token(token)
 
         if timeout is not None:
-            cache.set(token + "_basic_user_info", basic_user_info, timeout=timeout)
-            print("Cached token verification")
+            cache.set(token + "_user_data", user_data, timeout=timeout)
+            print(f"Cached data for user #{user_data.get('id')}")
     
     async def is_player_in_lobby(self, user_id):
         from lobbies.models import GameLobby

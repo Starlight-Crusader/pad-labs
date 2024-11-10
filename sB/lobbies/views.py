@@ -45,7 +45,7 @@ class CreateGameLobbyView(generics.CreateAPIView):
         # Call the superclass's create method to create the game lobby
         response = super().create(request, *args, **kwargs)
 
-        user_id = request.basic_user_info['id']
+        user_id = request.user_data['id']
         access = get_new_access_token(user_id)
 
         if not access:
@@ -68,7 +68,7 @@ class DiscoverGamesyLobbiesByRatingView(generics.ListAPIView):
     permission_classes = [ValidateTokenWithServiceA]
 
     def get_queryset(self):
-        user_rating = self.request.basic_user_info['rating']
+        user_rating = self.request.user_data['rating']
         min_rating = user_rating - 60
         max_rating = user_rating + 60
 
@@ -137,7 +137,7 @@ class ConnectToGameLobbyView(generics.UpdateAPIView):
     def update(self, request, *args, **kwargs):
         lobby = self.get_object()
         is_player = request.query_params.get('is_player')  # 0 for player, 1 for spectator
-        user_id = request.basic_user_info['id']
+        user_id = request.user_data['id']
 
         if is_player is None:
             return Response(

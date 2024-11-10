@@ -26,8 +26,8 @@ class CreateGameLobbySerializer(serializers.ModelSerializer):
         fields = ['connect_url']
 
     def create(self, validated_data):
-        user_id = self.context['request'].basic_user_info['id']
-        user_rating = round(self.context['request'].basic_user_info['rating'])
+        user_id = self.context['request'].user_data['id']
+        user_rating = round(self.context['request'].user_data['rating'])
 
         validated_data['players'] = [user_id]
         validated_data['rating'] = user_rating

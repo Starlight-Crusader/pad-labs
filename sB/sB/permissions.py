@@ -2,7 +2,6 @@ from rest_framework.permissions import BasePermission
 from rest_framework.exceptions import PermissionDenied
 import os
 import requests
-import jwt
 from django.core.cache import cache
 from .utilities import get_timeout_from_token
 
@@ -30,21 +29,21 @@ class ValidateTokenWithServiceA(BasePermission):
     def has_permission(self, request, view):
         full_token_str = request.headers.get('Authorization')
 
-        user_info = self.get_user_info(full_token_str)
-        if user_info:
-            request.basic_user_info = user_info
+        user_data = self.fetch_user_data_by_token(full_token_str)
+        if user_data:
+            request.user_data = user_data
             return True
         
         return False
-
-    def get_user_info(self, full_token_str):
+    
+    def fetch_user_data_by_token(self, full_token_str):
         token = full_token_str.split(' ')[1]
 
         # Check the cache first
-        cached_basic_user_info = cache.get(token + "_basic_user_info")
-        if cached_basic_user_info:
-            print(f"Using cached basic user info for user#{cached_basic_user_info.get('id')}")
-            return cached_basic_user_info
+        cached_user_data = cache.get(token + "_user_data")
+        if cached_user_data:
+            print(f"Using cached basic user info for user#{cached_user_data.get('id')}")
+            return cached_user_data
 
         try:
             # Make the request to Service A to validate the token
@@ -57,17 +56,17 @@ class ValidateTokenWithServiceA(BasePermission):
             )
 
             if response.status_code == 200:
-                user_info = response.json()
-                self.cache_basic_user_info(token, user_info)
-                return user_info
+                user_data = response.json()
+                self.cache_user_data(token, user_data)
+                return user_data
         except requests.RequestException as e:
             print(f"Request failed: {e}")
 
         return None
 
-    def cache_basic_user_info(self, token, basic_user_info):
+    def cache_user_data(self, token, user_data):
         timeout = get_timeout_from_token(token)
 
         if timeout is not None:
-            cache.set(token + "_basic_user_info", basic_user_info, timeout=timeout)
-            print(f"Cached basic user info for user#{basic_user_info.get('id')}")
+            cache.set(token + "_user_data", user_data, timeout=timeout)
+            print(f"Cached basic user info for user#{user_data.get('id')}")
