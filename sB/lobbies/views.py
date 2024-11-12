@@ -87,7 +87,7 @@ class DiscoverGamesyLobbiesWithFriendsView(generics.ListAPIView):
 
         cached_friends_ids = cache_get(token + "_friends_ids")
         if cached_friends_ids is not None:
-            print(f"Using cached friends IDs for token: {token}")
+            print(f"LOG: Using cached friends IDs for token: {token}")
             friends_ids = cached_friends_ids
         else:
             # Retrieve the list of friend IDs from service A
@@ -106,7 +106,7 @@ class DiscoverGamesyLobbiesWithFriendsView(generics.ListAPIView):
                 timeout = get_timeout_from_token(token)  # Use the timeout function
                 if timeout is not None:
                     cache_set(token + "_friends_ids", friends_ids, timeout=timeout)
-                    print(f"Cached friends IDs for user token: {token}")
+                    print(f"LOG: Cached friends IDs for user token: {token}")
 
             else:
                 friends_ids = []

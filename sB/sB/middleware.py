@@ -50,7 +50,7 @@ class LogstashMiddleware:
         response = self.get_response(request)
 
         log_info = {
-            "service": f"{logger.service_name}_{socket.gethostbyname(socket.gethostname())}",
+            "service": f"{logger.service_name}_{socket.gethostbyname(socket.gethostname())}"
         }
 
         if 400 <= response.status_code < 600:

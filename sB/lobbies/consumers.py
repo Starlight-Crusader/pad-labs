@@ -113,7 +113,7 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
 
         cached_user_data = cache_get(token + "_user_data")
         if cached_user_data:
-            print(f"Using cached data for user #{cached_user_data.get('id')}")
+            print(f"LOG: Using cached data for user #{cached_user_data.get('id')}")
             self.scope['user_data'] = cached_user_data
             return True
 
@@ -138,7 +138,7 @@ class LobbyConsumer(AsyncJsonWebsocketConsumer):
 
         if timeout is not None:
             cache_set(token + "_user_data", user_data, timeout=timeout)
-            print(f"Cached data for user #{user_data.get('id')}")
+            print(f"LOG: Cached data for user #{user_data.get('id')}")
     
     async def is_player_in_lobby(self, user_id):
         from lobbies.models import GameLobby
