@@ -1,11 +1,11 @@
-version: '3.8'
+# version: '3.8'
 
 services:
-  postgres_a:
-    image: postgres:14
-    container_name: postgres_a
+  postgres-a:
+    image: postgres:latest
+    container_name: postgres-a
     volumes:
-      - postgres_data_a:/var/lib/postgresql/data
+      - postgres-data-a:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: service_a_db
       POSTGRES_USER: service_a_user
@@ -15,11 +15,11 @@ services:
     networks:
       - pad-network
 
-  postgres_b:
-    image: postgres:14
-    container_name: postgres_b
+  postgres-b:
+    image: postgres:latest
+    container_name: postgres-b
     volumes:
-      - postgres_data_b:/var/lib/postgresql/data
+      - postgres-data-b:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: service_b_db
       POSTGRES_USER: service_b_user
@@ -37,11 +37,10 @@ services:
     volumes:
       - ./sA:/app
     depends_on:
-      - postgres_a
       - api-gateway
     environment:
       - DJANGO_SETTINGS_MODULE=sA.settings
-      - DATABASE_URL=postgres://service_a_user:service_a_password@postgres_a:5432/service_a_db
+      - DATABASE_URL=postgres://service_a_user:service_a_password@postgres-a:5432/service_a_db
       - API_GATEWAY_BASE_URL=http://api-gateway:8080/
       - SERVICE_TYPE=A
       - SD_HOST=service-discovery
@@ -49,6 +48,7 @@ services:
       - PORT=8000
       - SLEEP_DURATION_S=10
       - LOGGING=0
+      - RUN_MIGRATIONS=true
     ports:
       - "8000:8000"
     networks:
@@ -62,11 +62,10 @@ services:
     volumes:
       - ./sA:/app
     depends_on:
-      - postgres_a
       - api-gateway
     environment:
       - DJANGO_SETTINGS_MODULE=sA.settings
-      - DATABASE_URL=postgres://service_a_user:service_a_password@postgres_a:5432/service_a_db
+      - DATABASE_URL=postgres://service_a_user:service_a_password@postgres-a:5432/service_a_db
       - API_GATEWAY_BASE_URL=http://api-gateway:8080/
       - SERVICE_TYPE=A
       - SD_HOST=service-discovery
@@ -74,34 +73,36 @@ services:
       - PORT=8001
       - SLEEP_DURATION_S=10
       - LOGGING=0
+      - RUN_MIGRATIONS=false
     ports:
       - "8001:8000"
     networks:
       - pad-network
 
-  # service-a-3:
-  #   container_name: service-a-3
-  #   build:
-  #     context: ./sA
-  #   entrypoint: ["./entrypoint.sh"]
-  #   volumes:
-  #     - ./sA:/app
-  #   depends_on:
-  #     - postgres_a
-  #     - api-gateway
-  #   environment:
-  #     - DJANGO_SETTINGS_MODULE=sA.settings
-  #     - DATABASE_URL=postgres://service_a_user:service_a_password@postgres_a:5432/service_a_db
-  #     - API_GATEWAY_BASE_URL=http://api-gateway:8080/
-  #     - SERVICE_TYPE=A
-  #     - SD_HOST=service-discovery
-  #     - SD_PORT=50051
-  #     - PORT=8002
-  #     - SLEEP_DURATION_S=10
-  #   ports:
-  #     - "8002:8000"
-  #   networks:
-  #     - pad-network
+  service-a-3:
+    container_name: service-a-3
+    build:
+      context: ./sA
+    entrypoint: ["./entrypoint.sh"]
+    volumes:
+      - ./sA:/app
+    depends_on:
+      - api-gateway
+    environment:
+      - DJANGO_SETTINGS_MODULE=sA.settings
+      - DATABASE_URL=postgres://service_a_user:service_a_password@postgres-a:5432/service_a_db
+      - API_GATEWAY_BASE_URL=http://api-gateway:8080/
+      - SERVICE_TYPE=A
+      - SD_HOST=service-discovery
+      - SD_PORT=50051
+      - PORT=8002
+      - SLEEP_DURATION_S=10
+      - LOGGING=0
+      - RUN_MIGRATIONS=false
+    ports:
+      - "8002:8000"
+    networks:
+      - pad-network
 
   service-b-1:
     container_name: service-b-1
@@ -111,20 +112,19 @@ services:
     volumes:
       - ./sB:/app
     depends_on:
-      - postgres_b
+      - postgres-b
       - api-gateway
+      - redis-cluster-init-node
     environment:
       - DJANGO_SETTINGS_MODULE=sB.settings
-      - DATABASE_URL=postgres://service_b_user:service_b_password@postgres_b:5432/service_b_db
+      - DATABASE_URL=postgres://service_b_user:service_b_password@postgres-b:5432/service_b_db
       - API_GATEWAY_BASE_URL=http://api-gateway:8080/
       - SERVICE_TYPE=B
       - SD_HOST=service-discovery
       - SD_PORT=50051
       - PORT=8003
       - LOGGING=0
-      - UD_CACHE_HOST_1=ud_cache_cluster_redis_1
-      - UD_CACHE_HOST_2=ud_cache_cluster_redis_2
-      - UD_CACHE_HOST_3=ud_cache_cluster_redis_3
+      - RUN_MIGRATIONS=true
     ports:
       - "8003:8000"
     networks:
@@ -138,57 +138,55 @@ services:
     volumes:
       - ./sB:/app
     depends_on:
-      - postgres_b
+      - postgres-b
       - api-gateway
+      - redis-cluster-init-node
     environment:
       - DJANGO_SETTINGS_MODULE=sB.settings
-      - DATABASE_URL=postgres://service_b_user:service_b_password@postgres_b:5432/service_b_db
+      - DATABASE_URL=postgres://service_b_user:service_b_password@postgres-b:5432/service_b_db
       - API_GATEWAY_BASE_URL=http://api-gateway:8080/
       - SERVICE_TYPE=B
       - SD_HOST=service-discovery
       - SD_PORT=50051
       - PORT=8004
       - LOGGING=0
-      - UD_CACHE_HOST_1=ud_cache_cluster_redis_1
-      - UD_CACHE_HOST_2=ud_cache_cluster_redis_2
-      - UD_CACHE_HOST_3=ud_cache_cluster_redis_3
+      - RUN_MIGRATIONS=false
     ports:
       - "8004:8000"
     networks:
       - pad-network
 
-  # service-b-3:
-  #   container_name: service-b-3
-  #   build:
-  #     context: ./sB
-  #   entrypoint: ["./entrypoint.sh"]
-  #   volumes:
-  #     - ./sB:/app
-  #   depends_on:
-  #     - postgres_b
-  #     - api-gateway
-  #   environment:
-  #     - DJANGO_SETTINGS_MODULE=sB.settings
-  #     - DATABASE_URL=postgres://service_b_user:service_b_password@postgres_b:5432/service_b_db
-  #     - API_GATEWAY_BASE_URL=http://api-gateway:8080/
-  #     - SERVICE_TYPE=B
-  #     - SD_HOST=service-discovery
-  #     - SD_PORT=50051
-  #     - PORT=8005
-  #     - LOGGING=0
-  #     - UD_CACHE_HOST_1=ud_cache_cluster_redis_1
-  #     - UD_CACHE_HOST_2=ud_cache_cluster_redis_2
-  #     - UD_CACHE_HOST_3=ud_cache_cluster_redis_3
-  #   ports:
-  #     - "8005:8000"
-  #   networks:
-  #     - pad-network
-
-  sm_redis:
-    image: redis:latest
-    container_name: sm_redis
+  service-b-3:
+    container_name: service-b-3
+    build:
+      context: ./sB
+    entrypoint: ["./entrypoint.sh"]
+    volumes:
+      - ./sB:/app
+    depends_on:
+      - postgres-b
+      - api-gateway
+      - redis-cluster-init-node
+    environment:
+      - DJANGO_SETTINGS_MODULE=sB.settings
+      - DATABASE_URL=postgres://service_b_user:service_b_password@postgres-b:5432/service_b_db
+      - API_GATEWAY_BASE_URL=http://api-gateway:8080/
+      - SERVICE_TYPE=B
+      - SD_HOST=service-discovery
+      - SD_PORT=50051
+      - PORT=8005
+      - LOGGING=0
+      - RUN_MIGRATIONS=false
     ports:
-      - "6379:6379"
+      - "8005:8000"
+    networks:
+      - pad-network
+
+  sm-redis:
+    image: redis:latest
+    container_name: sm-redis
+    ports:
+      - "6479:6379"
     command: redis-server --save "" --appendonly no
     networks:
       - pad-network
@@ -199,17 +197,18 @@ services:
       context: ./api-gateway
     environment:
       - PORT=8080
-      - SM_REDIS_URL=redis://sm_redis:6379
+      - SM_REDIS_URL=redis://sm-redis:6379
       - SERV_REST_PORT=8000
-      - REQUEST_TIMEOUT_MS=5000
+      - REQUEST_TIMEOUT_MS=9000
       - MAX_TASKS_PER_SERVICE=1
       - CRTICAL_LOAD_PER_MIN=5
       - MAX_RETRIES=3
       - MAX_REDIRECTS=3
+      - LOGGING=0
     ports:
       - "8080:8080"
     depends_on:
-      - sm_redis
+      - sm-redis
       - service-discovery
     networks:
       - pad-network
@@ -220,41 +219,108 @@ services:
       context: ./service-discovery
     environment:
       - PORT=50051
-      - SM_REDIS_URL=redis://sm_redis:6379
+      - SM_REDIS_URL=redis://sm-redis:6379
       - SERV_REST_PORT=8000
+      - LOGGING=0
     ports:
       - "50051:50051"
     depends_on:
-      - sm_redis
+      - sm-redis
     networks:
       - pad-network
     volumes:
-      - service_discovery-data:/app/logs
+      - service-discovery-data:/app/logs
   
-  ud_cache_cluster_redis_1:
-    image: redis:latest
-    container_name: ud_cache_cluster_redis_1
+  ud-redis-node-1:
+    image: bitnami/redis-cluster:latest
+    container_name: ud-redis-node-1
+    environment:
+      - REDIS_NODES=ud-redis-node-1,ud-redis-node-2,ud-redis-node-3,ud-redis-node-4,ud-redis-node-5,ud-redis-node-6
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - "6379:6379"
+    networks:
+      - pad-network
+    tmpfs:
+      - /bitnami/redis
+
+  ud-redis-node-2:
+    image: bitnami/redis-cluster:latest
+    container_name: ud-redis-node-2
+    environment:
+      - REDIS_NODES=ud-redis-node-1,ud-redis-node-2,ud-redis-node-3,ud-redis-node-4,ud-redis-node-5,ud-redis-node-6
+      - ALLOW_EMPTY_PASSWORD=yes
     ports:
       - "6380:6379"
-    command: redis-server --save "" --appendonly no
     networks:
       - pad-network
+    tmpfs:
+      - /bitnami/redis
 
-  ud_cache_cluster_redis_2:
-    image: redis:latest
-    container_name: ud_cache_cluster_redis_2
+  ud-redis-node-3:
+    image: bitnami/redis-cluster:latest
+    container_name: ud-redis-node-3
+    environment:
+      - REDIS_NODES=ud-redis-node-1,ud-redis-node-2,ud-redis-node-3,ud-redis-node-4,ud-redis-node-5,ud-redis-node-6
+      - ALLOW_EMPTY_PASSWORD=yes
     ports:
       - "6381:6379"
-    command: redis-server --save "" --appendonly no
     networks:
       - pad-network
+    tmpfs:
+      - /bitnami/redis
 
-  ud_cache_cluster_redis_3:
-    image: redis:latest
-    container_name: ud_cache_cluster_redis_3
+  ud-redis-node-4:
+    image: bitnami/redis-cluster:latest
+    container_name: ud-redis-node-4
+    environment:
+      - REDIS_NODES=ud-redis-node-1,ud-redis-node-2,ud-redis-node-3,ud-redis-node-4,ud-redis-node-5,ud-redis-node-6
+      - ALLOW_EMPTY_PASSWORD=yes
     ports:
       - "6382:6379"
-    command: redis-server --save "" --appendonly no
+    networks:
+      - pad-network
+    tmpfs:
+      - /bitnami/redis
+
+  ud-redis-node-5:
+    image: bitnami/redis-cluster:latest
+    container_name: ud-redis-node-5
+    environment:
+      - REDIS_NODES=ud-redis-node-1,ud-redis-node-2,ud-redis-node-3,ud-redis-node-4,ud-redis-node-5,ud-redis-node-6
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - "6383:6379"
+    networks:
+      - pad-network
+    tmpfs:
+      - /bitnami/redis
+
+  ud-redis-node-6:
+    image: bitnami/redis-cluster:latest
+    container_name: ud-redis-node-6
+    environment:
+      - REDIS_NODES=ud-redis-node-1,ud-redis-node-2,ud-redis-node-3,ud-redis-node-4,ud-redis-node-5,ud-redis-node-6
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - "6384:6379"
+    networks:
+      - pad-network
+    tmpfs:
+      - /bitnami/redis
+
+  redis-cluster-init-node:
+    container_name: redis-cluster-init-node
+    build:
+      context: ./config/redis_cluster
+      dockerfile: Dockerfile
+    depends_on:
+      - ud-redis-node-1
+      - ud-redis-node-2
+      - ud-redis-node-3
+      - ud-redis-node-4
+      - ud-redis-node-5
+      - ud-redis-node-6
     networks:
       - pad-network
   
@@ -311,15 +377,15 @@ services:
   #     - pad-network
   #   volumes:
   #     - ./config/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
-  #     - service_discovery-data:/usr/share/filebeat/data
+  #     - service-discovery-data:/usr/share/filebeat/data
   #   depends_on:
   #     - logstash
 
 volumes:
-  postgres_data_a:
-  postgres_data_b:
+  postgres-data-a:
+  postgres-data-b:
   # elasticsearch-data:
-  service_discovery-data:
+  service-discovery-data:
 
 networks:
   pad-network:

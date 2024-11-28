@@ -1,7 +1,6 @@
 asgiref==3.8.1
 certifi==2024.8.30
 channels==4.1.0
-channels-redis==4.2.0
 charset-normalizer==3.3.2
 click==8.1.7
 colorama==0.4.6
@@ -16,7 +15,7 @@ msgpack==1.1.0
 protobuf==5.28.2
 psycopg2-binary==2.9.9
 PyJWT==2.9.0
-redis==5.0.8
+redis>=4.0.0
 requests==2.32.3
 setuptools==75.1.0
 sqlparse==0.5.1

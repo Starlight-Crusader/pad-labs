@@ -23,6 +23,8 @@ const LOGSTASH_HTTP_PORT = process.env.LOGSTASH_HTTP_PORT || 6000;
 
 const ROOT_PASS = process.env.ROOT_PASS;
 
+const LOGGING = parseInt(process.env.ROOT_PASS);
+
 // Initialize Winston logger
 const logger = winston.createLogger({
     transports: [
@@ -37,10 +39,12 @@ const logger = winston.createLogger({
 
 // Quick logs
 function logMsg(msg) {
-    logger.info(JSON.stringify({
-        "service": "api_gateway",
-        "msg": msg
-    }));
+    if (LOGGING) {
+        logger.info(JSON.stringify({
+            "service": "api_gateway",
+            "msg": msg
+        }));
+    }
 }
 
 // JSON body parsing
@@ -53,11 +57,10 @@ redisClient.connect().catch(console.error);
 // Cleanly close Redis connection and server on shutdown - Gracefull Shutdown
 async function shutdown(signal) {
     console.log(`LOG: Received ${signal}. Closing Redis and HTTP server...`);
-    logMsg(`LOG: Received ${signal}. Closing Redis and HTTP server...`);
     await redisClient.quit();
     server.close(() => {
-        console.log('LOG: Express server closed');
-        logMsg('LOG: Express server closed');
+        console.log('LOG: API Gateway closed');
+        logMsg('LOG: API Gateway closed');
         process.exit(0);
     });
 }
@@ -176,13 +179,13 @@ async function handleServiceRequest(serviceType, method, endpoint, body, headers
     const instancesWithLoad = await Promise.all(
         serviceIPs.map(async ip => ({
             ip,
-            load: await getParam('tasks', ip)
+            load: await getParam('load', ip)
         }))
     );
 
     // Can comment this out to demonstrate how requests are passed from one busy instance to another
     // until they reach an available instance
-    // instancesWithLoad.sort((a, b) => a.load - b.load);
+    instancesWithLoad.sort((a, b) => a.load - b.load);
 
     // Try each instance in order of load
     for (const { ip } of instancesWithLoad.slice(0, MAX_REDIRECTS)) {

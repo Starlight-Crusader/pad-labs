@@ -9,6 +9,8 @@ require('dotenv').config();
 const PORT = process.env.PORT;
 const SM_REDIS_URL = process.env.SM_REDIS_URL;
 
+const LOGGING = parseInt(process.env.LOGGING);
+
 // Initialize Winston logger
 const logger = winston.createLogger({
     transports: [
@@ -19,6 +21,16 @@ const logger = winston.createLogger({
         })
     ],
 });
+
+// Quick logs
+function logMsg(msg) {
+    if (LOGGING) {
+        logger.info(JSON.stringify({
+            "service": "service_discovery",
+            "msg": msg
+        }));
+    }
+}
 
 // Connect to Redis
 const redisClient = redis.createClient({ url: SM_REDIS_URL });
@@ -40,19 +52,12 @@ function registerService(call, callback) {
     redisClient.lPush(redisKey, ip)
         .then(() => {
             console.log(`LOG: Registered ${redisKey} at IP - ${ip}`);
-            logger.info(JSON.stringify({
-                "service": 'service_discovery',
-                "msg": `LOG: Registered ${redisKey} at IP - ${ip}`,
-            }));
-
+            logMsg(`LOG: Registered ${redisKey} at IP - ${ip}`);
             callback(null, { success: true, detail: `Service ${serviceType} registered successfully.` });
         })
         .catch(err => {
             console.error('Redis error:', err);
-            // logger.error(JSON.stringify({
-            //     "service": 'service_discovery',
-            //     "msg": `Redis error: ${err}`,
-            // }));
+            logMsg('An error occured. Check container logs');
 
             callback(null, { success: false, detail: 'Failed to register service.' });
         });
@@ -72,10 +77,7 @@ function startGrpcServer() {
     
     server.bindAsync(`0.0.0.0:${PORT}`, grpc.ServerCredentials.createInsecure(), () => {
         console.log(`LOG: gRPC service discovery running at http://0.0.0.0:${PORT}`);
-        // logger.info(JSON.stringify({
-        //     "service": 'service_discovery',
-        //     "msg": `LOG: gRPC service discovery running at http://0.0.0.0:${PORT}`,
-        // }));
+        logMsg(`LOG: gRPC service discovery running at http://0.0.0.0:${PORT}`);
 
         server.start();
     });
@@ -88,33 +90,22 @@ function startGrpcServer() {
         server.tryShutdown(async (err) => {
             if (err) {
                 console.error('Error shutting down gRPC server:', err);
-                // logger.error(JSON.stringify({
-                //     "service": 'service_discovery',
-                //     "msg": `Error shutting down gRPC server: ${err}`,
-                // }));
+                logMsg('An error occured. Check container logs');
             } else {
                 console.log('gRPC server stopped accepting new requests.');
-                // logger.info(JSON.stringify({
-                //     "service": 'service_discovery',
-                //     "msg": 'gRPC server stopped accepting new requests.',
-                // }));
             }
             
             // Close Redis connection
             try {
                 await redisClient.quit();
                 console.log('Redis client disconnected.');
-                // logger.info(JSON.stringify({
-                //     "service": 'service_discovery',
-                //     "msg": 'Redis client disconnected.',
-                // }));
             } catch (redisErr) {
                 console.error('Error disconnecting Redis client:', redisErr);
-                // logger.error(JSON.stringify({
-                //     "service": 'service_discovery',
-                //     "msg": `Error disconnecting Redis client: ${redisErr}`,
-                // }));
+                logMsg('An error occured. Check container logs');
             }
+
+            console.log('LOG: Service Discovery closed');
+                logMsg('LOG: Service Discovery closed');
 
             // Exit process after graceful shutdown
             process.exit(0);
