@@ -1,0 +1,41 @@
+scope: patroni
+namespace: /service/
+
+bootstrap:
+    dcs:
+        ttl: 30
+        loop_wait: 10
+        retry_timeout: 10
+        maximum_lag_on_failover: 1048576
+        postgresql:
+            use_pg_rewind: true
+
+    postgresql:
+      use_pg_rewind: true
+
+    initdb:
+    - encoding: UTF8
+    - data-checksums
+
+    pg_hba:
+    - host replication all all md5
+    - host all all all md5
+
+zookeeper:
+  hosts: 
+      - zoo1:2181
+      - zoo2:2181
+      - zoo3:2181
+
+postgresql:
+    data_dir: /data/patroni
+    bin_dir: /usr/lib/postgresql/11/bin
+    pgpass: /tmp/pgpass
+    parameters:
+        unix_socket_directories: '.'
+
+tags:
+    nofailover: false
+    noloadbalance: false
+    clonefrom: false
+    nosync: false

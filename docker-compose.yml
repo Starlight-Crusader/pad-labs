@@ -1,19 +1,107 @@
 # version: '3.8'
 
 services:
-  postgres-a:
-    image: postgres:latest
-    container_name: postgres-a
-    volumes:
-      - postgres-data-a:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: service_a_db
-      POSTGRES_USER: service_a_user
-      POSTGRES_PASSWORD: service_a_password
+
+  zoo1:
+    image: zookeeper:3.4
+    hostname: zoo1
     ports:
-      - "5432:5432"
+      - 2191:2181
     networks:
       - pad-network
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=0.0.0.0:2888:3888 server.2=zoo2:2888:3888 server.3=zoo3:2888:3888
+
+  zoo2:
+    image: zookeeper:3.4
+    hostname: zoo2
+    networks:
+      - pad-network
+    ports:
+      - 2192:2181
+    environment:
+      ZOO_MY_ID: 2
+      ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=0.0.0.0:2888:3888 server.3=zoo3:2888:3888
+
+  zoo3:
+    image: zookeeper:3.4
+    hostname: zoo3
+    networks:
+      - pad-network
+    ports:
+      - 2193:2181
+    environment:
+      ZOO_MY_ID: 3
+      ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=zoo2:2888:3888 server.3=0.0.0.0:2888:3888
+
+  patroni1:
+    image: patroni-test
+    networks: 
+      - pad-network
+    ports:
+      - "5441:5432"
+      - "8091:8091"
+    hostname: patroni1
+    volumes:
+      - /patroni1:/data/patroni
+    environment:
+      PATRONI_API_CONNECT_PORT: 8091
+      REPLICATION_NAME: replicator
+      REPLICATION_PASS: replpass
+      SU_NAME: postgres
+      SU_PASS: supass
+      POSTGRES_APP_ROLE_PASS: appass
+
+  patroni2:
+    image: patroni-test
+    networks:
+      - pad-network
+    ports:
+        - 5442:5432
+        - 8092:8091
+    hostname: patroni2
+    volumes:
+      - /patroni2:/data/patroni
+    environment:
+        PATRONI_API_CONNECT_PORT: 8091
+        REPLICATION_NAME: replicator 
+        REPLICATION_PASS: replpass
+        SU_NAME: postgres
+        SU_PASS: supass
+        POSTGRES_APP_ROLE_PASS: appass
+
+  patroni3:
+    image: patroni-test
+    networks:
+      - pad-network
+    ports:
+        - 5443:5432
+        - 8093:8091
+    hostname: patroni3
+    volumes:
+      - /patroni3:/data/patroni
+    environment:
+        PATRONI_API_CONNECT_PORT: 8091
+        REPLICATION_NAME: replicator 
+        REPLICATION_PASS: replpass
+        SU_NAME: postgres
+        SU_PASS: supass
+        POSTGRES_APP_ROLE_PASS: appass
+
+  # postgres-a:
+  #   image: postgres:latest
+  #   container_name: postgres-a
+  #   volumes:
+  #     - postgres-data-a:/var/lib/postgresql/data
+  #   environment:
+  #     POSTGRES_DB: service_a_db
+  #     POSTGRES_USER: service_a_user
+  #     POSTGRES_PASSWORD: service_a_password
+  #   ports:
+  #     - "5432:5432"
+  #   networks:
+  #     - pad-network
 
   postgres-b:
     image: postgres:latest
@@ -382,7 +470,10 @@ services:
   #     - logstash
 
 volumes:
-  postgres-data-a:
+  patroni1:
+  patroni2:
+  patroni3:
+  # postgres-data-a:
   postgres-data-b:
   # elasticsearch-data:
   service-discovery-data:
