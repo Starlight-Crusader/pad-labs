@@ -23,7 +23,7 @@ const LOGSTASH_HTTP_PORT = process.env.LOGSTASH_HTTP_PORT || 6000;
 
 const ROOT_PASS = process.env.ROOT_PASS;
 
-const LOGGING = parseInt(process.env.ROOT_PASS);
+const LOGGING = parseInt(process.env.LOGGING);
 
 // Initialize Winston logger
 const logger = winston.createLogger({
@@ -246,8 +246,11 @@ app.use('/sA/:path(*)', async (req, res) => {
         res.status(response.status).send(response.data);
     } catch (error) {
         if (error.response?.status) {
+            const detail = error.response.data?.detail 
+                ? error.response.data.detail 
+                : error.response.data;
             res.status(error.response.status).json({ 
-                detail: error.response.data?.detail || error.message 
+                detail 
             });
         } else {
             res.status(500).json({ 
@@ -271,8 +274,11 @@ app.use('/sB/:path(*)', async (req, res) => {
         res.status(response.status).send(response.data);
     } catch (error) {
         if (error.response?.status) {
+            const detail = error.response.data?.detail 
+                ? error.response.data.detail 
+                : error.response.data;
             res.status(error.response.status).json({ 
-                detail: error.response.data?.detail || error.message 
+                detail 
             });
         } else {
             res.status(500).json({ 
@@ -285,7 +291,6 @@ app.use('/sB/:path(*)', async (req, res) => {
 });
 
 app.delete('/saga/full-user-removal', async (req, res) => {
-    
     // Extract token from Authorization header
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -294,24 +299,30 @@ app.delete('/saga/full-user-removal', async (req, res) => {
 
     try {
         // Step 1: Validate token and get user info
-        const validateResponse = await fetch('http://localhost:8080/sA/api/utilities/validate-token', {
+        const serviceAIPs = await getServiceIPs('A');
+        if (serviceAIPs.length === 0) throw new Error('No service A instances available.');
+
+        const validateResponse = await fetch(`http://${serviceAIPs[0]}:${SERV_REST_PORT}/api/utilities/validate-token`, {
             method: 'GET',
             headers: {
                 'X-Root-Password': ROOT_PASS,
                 'Authorization': authHeader
             }
         });
-        
+
         if (!validateResponse.ok) {
             throw new Error('Token validation failed');
         }
-        
+
         const userData = await validateResponse.json();
-        const { id, username, rating } = userData;
-        
+        const { id, username } = userData;
+
         // Step 2: Delete user's game records
+        const serviceBIPs = await getServiceIPs('B');
+        if (serviceBIPs.length === 0) throw new Error('No service B instances available.');
+
         const deleteRecordsResponse = await fetch(
-            `http://localhost:8080/sB/api/records/user-delete?username=${encodeURIComponent(username)}`,
+            `http://${serviceBIPs[0]}:${SERV_REST_PORT}/api/records/user-delete?username=${encodeURIComponent(username)}`,
             {
                 method: 'DELETE',
                 headers: {
@@ -319,18 +330,18 @@ app.delete('/saga/full-user-removal', async (req, res) => {
                 }
             }
         );
-        
+
         if (!deleteRecordsResponse.ok) {
             throw new Error('Failed to delete user records');
         }
-        
+
         const deletedData = await deleteRecordsResponse.json();
         const deletedRecords = deletedData.deleted_records;
-        
+
         // Step 3: Delete user account
         try {
             const deleteUserResponse = await fetch(
-                `http://localhost:8080/sA/api/users/${id}/destroy`,
+                `http://${serviceAIPs[0]}:${SERV_REST_PORT}/api/users/${id}/destroy`,
                 {
                     method: 'DELETE',
                     headers: {
@@ -338,33 +349,35 @@ app.delete('/saga/full-user-removal', async (req, res) => {
                     }
                 }
             );
-            
+
             if (!deleteUserResponse.ok) {
                 throw new Error('Failed to delete user account');
             }
-            
+
             // Success - return confirmation
             return res.status(200).json({
                 message: 'All data associated with the user removed.'
             });
-            
         } catch (userDeletionError) {
             // Rollback: Restore deleted records
             const rollbackRecords = deletedRecords.map(record => {
                 const { id, ...recordWithoutId } = record;
                 return recordWithoutId;
             });
-            
+
             // Attempt rollback
-            const rollbackResponse = await fetch('http://localhost:8080/sB/api/records/save', {
-                method: 'POST',
-                headers: {
-                    'X-Root-Password': ROOT_PASS,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(rollbackRecords)
-            });
-            
+            const rollbackResponse = await fetch(
+                `http://${serviceBIPs[0]}:${SERV_REST_PORT}/api/records/save`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'X-Root-Password': ROOT_PASS,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(rollbackRecords)
+                }
+            );
+
             if (!rollbackResponse.ok) {
                 // Critical error: Rollback failed
                 return res.status(500).json({
@@ -373,7 +386,7 @@ app.delete('/saga/full-user-removal', async (req, res) => {
                     rollbackError: 'Failed to restore the data deleted in the first phase.'
                 });
             }
-            
+
             // Rollback succeeded but original operation failed
             return res.status(500).json({
                 error: 'User deletion failed - records have been restored.',
@@ -383,7 +396,7 @@ app.delete('/saga/full-user-removal', async (req, res) => {
     } catch (error) {
         return res.status(500).json({
             error: 'Saga transaction failed.',
-            details: error.message + '.'
+            details: error.message
         });
     }
 });

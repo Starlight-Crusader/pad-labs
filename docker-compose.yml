@@ -1,107 +1,84 @@
-# version: '3.8'
-
 services:
-
-  zoo1:
-    image: zookeeper:3.4
-    hostname: zoo1
+  pg-1:
+    container_name: postgres_1
+    image: bitnami/postgresql-repmgr:14.9.0
     ports:
-      - 2191:2181
-    networks:
-      - pad-network
-    environment:
-      ZOO_MY_ID: 1
-      ZOO_SERVERS: server.1=0.0.0.0:2888:3888 server.2=zoo2:2888:3888 server.3=zoo3:2888:3888
-
-  zoo2:
-    image: zookeeper:3.4
-    hostname: zoo2
-    networks:
-      - pad-network
-    ports:
-      - 2192:2181
-    environment:
-      ZOO_MY_ID: 2
-      ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=0.0.0.0:2888:3888 server.3=zoo3:2888:3888
-
-  zoo3:
-    image: zookeeper:3.4
-    hostname: zoo3
-    networks:
-      - pad-network
-    ports:
-      - 2193:2181
-    environment:
-      ZOO_MY_ID: 3
-      ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=zoo2:2888:3888 server.3=0.0.0.0:2888:3888
-
-  patroni1:
-    image: patroni-test
-    networks: 
-      - pad-network
-    ports:
-      - "5441:5432"
-      - "8091:8091"
-    hostname: patroni1
+      - "5432:5432"
     volumes:
-      - /patroni1:/data/patroni
+      - pg_1_data:/bitnami/postgresql
     environment:
-      PATRONI_API_CONNECT_PORT: 8091
-      REPLICATION_NAME: replicator
-      REPLICATION_PASS: replpass
-      SU_NAME: postgres
-      SU_PASS: supass
-      POSTGRES_APP_ROLE_PASS: appass
-
-  patroni2:
-    image: patroni-test
+      - POSTGRESQL_POSTGRES_PASSWORD=adminapass
+      - POSTGRESQL_USERNAME=auser
+      - POSTGRESQL_PASSWORD=apass
+      - POSTGRESQL_DATABASE=adb
+      - REPMGR_PASSWORD=repmgrpassword
+      - REPMGR_PRIMARY_HOST=pg-1
+      - REPMGR_PRIMARY_PORT=5432
+      - REPMGR_PARTNER_NODES=pg-1,pg-2,pg-3:5432
+      - REPMGR_NODE_NAME=pg-1
+      - REPMGR_NODE_NETWORK_NAME=pg-1
+      - REPMGR_PORT_NUMBER=5432
+      - REPMGR_CONNECT_TIMEOUT=1
+      - REPMGR_RECONNECT_ATTEMPTS=2
+      - REPMGR_RECONNECT_INTERVAL=1
+      - REPMGR_MASTER_RESPONSE_TIMEOUT=5
+    restart: unless-stopped
     networks:
       - pad-network
-    ports:
-        - 5442:5432
-        - 8092:8091
-    hostname: patroni2
-    volumes:
-      - /patroni2:/data/patroni
-    environment:
-        PATRONI_API_CONNECT_PORT: 8091
-        REPLICATION_NAME: replicator 
-        REPLICATION_PASS: replpass
-        SU_NAME: postgres
-        SU_PASS: supass
-        POSTGRES_APP_ROLE_PASS: appass
 
-  patroni3:
-    image: patroni-test
+  pg-2:
+    container_name: postgres_2
+    image: bitnami/postgresql-repmgr:14.9.0
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_2_data:/bitnami/postgresql
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=adminapass
+      - POSTGRESQL_USERNAME=auser
+      - POSTGRESQL_PASSWORD=apass
+      - POSTGRESQL_DATABASE=adb
+      - REPMGR_PASSWORD=repmgrpassword
+      - REPMGR_PRIMARY_HOST=pg-1
+      - REPMGR_PRIMARY_PORT=5432
+      - REPMGR_PARTNER_NODES=pg-1,pg-2,pg-3:5432
+      - REPMGR_NODE_NAME=pg-2
+      - REPMGR_NODE_NETWORK_NAME=pg-2
+      - REPMGR_PORT_NUMBER=5432
+      - REPMGR_CONNECT_TIMEOUT=1
+      - REPMGR_RECONNECT_ATTEMPTS=2
+      - REPMGR_RECONNECT_INTERVAL=1
+      - REPMGR_MASTER_RESPONSE_TIMEOUT=5
+    restart: unless-stopped
     networks:
       - pad-network
-    ports:
-        - 5443:5432
-        - 8093:8091
-    hostname: patroni3
-    volumes:
-      - /patroni3:/data/patroni
-    environment:
-        PATRONI_API_CONNECT_PORT: 8091
-        REPLICATION_NAME: replicator 
-        REPLICATION_PASS: replpass
-        SU_NAME: postgres
-        SU_PASS: supass
-        POSTGRES_APP_ROLE_PASS: appass
 
-  # postgres-a:
-  #   image: postgres:latest
-  #   container_name: postgres-a
-  #   volumes:
-  #     - postgres-data-a:/var/lib/postgresql/data
-  #   environment:
-  #     POSTGRES_DB: service_a_db
-  #     POSTGRES_USER: service_a_user
-  #     POSTGRES_PASSWORD: service_a_password
-  #   ports:
-  #     - "5432:5432"
-  #   networks:
-  #     - pad-network
+  pg-3:
+    container_name: postgres_3
+    image: bitnami/postgresql-repmgr:14.9.0
+    ports:
+      - "5434:5432"
+    volumes:
+      - pg_3_data:/bitnami/postgresql
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=adminapass
+      - POSTGRESQL_USERNAME=auser
+      - POSTGRESQL_PASSWORD=apass
+      - POSTGRESQL_DATABASE=adb
+      - REPMGR_PASSWORD=repmgrpassword
+      - REPMGR_PRIMARY_HOST=pg-1
+      - REPMGR_PRIMARY_PORT=5432
+      - REPMGR_PARTNER_NODES=pg-1,pg-2,pg-3:5432
+      - REPMGR_NODE_NAME=pg-3
+      - REPMGR_NODE_NETWORK_NAME=pg-3
+      - REPMGR_PORT_NUMBER=5432
+      - REPMGR_CONNECT_TIMEOUT=1
+      - REPMGR_RECONNECT_ATTEMPTS=2
+      - REPMGR_RECONNECT_INTERVAL=1
+      - REPMGR_MASTER_RESPONSE_TIMEOUT=5
+    restart: unless-stopped
+    networks:
+      - pad-network
 
   postgres-b:
     image: postgres:latest
@@ -113,7 +90,24 @@ services:
       POSTGRES_USER: service_b_user
       POSTGRES_PASSWORD: service_b_password
     ports:
-      - "5433:5432"
+      - 5435:5432
+    networks:
+      - pad-network
+
+  migration-node:
+    build: ./migration_node
+    container_name: migration-node
+    environment:
+      - DATABASE_URL_DB1=postgres://auser:apass@pg-1:5432/adb
+      - DATABASE_URL_DB2=postgres://auser:apass@pg-2:5432/adb
+      - DATABASE_URL_DB3=postgres://auser:apass@pg-3:5432/adb
+    volumes:
+      - ./migration_node:/app
+    entrypoint: /app/entrypoint.sh
+    depends_on:
+      - pg-1
+      - pg-2
+      - pg-3
     networks:
       - pad-network
 
@@ -124,21 +118,26 @@ services:
     entrypoint: ["./entrypoint.sh"]
     volumes:
       - ./sA:/app
-    depends_on:
-      - api-gateway
     environment:
       - DJANGO_SETTINGS_MODULE=sA.settings
-      - DATABASE_URL=postgres://service_a_user:service_a_password@postgres-a:5432/service_a_db
+      - DATABASE_URL_DB1=postgres://habrpguser:pgpwd4habr@pg-1:5432/habrdb
+      - DATABASE_URL_DB2=postgres://habrpguser:pgpwd4habr@pg-2:5432/habrdb
+      - DATABASE_URL_DB3=postgres://habrpguser:pgpwd4habr@pg-3:5432/habrdb
       - API_GATEWAY_BASE_URL=http://api-gateway:8080/
       - SERVICE_TYPE=A
       - SD_HOST=service-discovery
       - SD_PORT=50051
       - PORT=8000
       - SLEEP_DURATION_S=10
-      - LOGGING=0
-      - RUN_MIGRATIONS=true
+      - LOGGING=1
+      - RUN_MIGRATIONS=false
+      - ROOT_PASSWORD=SambubU
+      - SECRET_KEY=chipichipichapachapa
     ports:
       - "8000:8000"
+    depends_on:
+      - logstash
+      - service-discovery
     networks:
       - pad-network
 
@@ -149,21 +148,26 @@ services:
     entrypoint: ["./entrypoint.sh"]
     volumes:
       - ./sA:/app
-    depends_on:
-      - api-gateway
     environment:
       - DJANGO_SETTINGS_MODULE=sA.settings
-      - DATABASE_URL=postgres://service_a_user:service_a_password@postgres-a:5432/service_a_db
+      - DATABASE_URL_DB1=postgres://habrpguser:pgpwd4habr@pg-1:5432/habrdb
+      - DATABASE_URL_DB2=postgres://habrpguser:pgpwd4habr@pg-2:5432/habrdb
+      - DATABASE_URL_DB3=postgres://habrpguser:pgpwd4habr@pg-3:5432/habrdb
       - API_GATEWAY_BASE_URL=http://api-gateway:8080/
       - SERVICE_TYPE=A
       - SD_HOST=service-discovery
       - SD_PORT=50051
       - PORT=8001
       - SLEEP_DURATION_S=10
-      - LOGGING=0
+      - LOGGING=1
       - RUN_MIGRATIONS=false
+      - ROOT_PASSWORD=SambubU
+      - SECRET_KEY=chipichipichapachapa
     ports:
       - "8001:8000"
+    depends_on:
+      - logstash
+      - service-discovery
     networks:
       - pad-network
 
@@ -174,21 +178,26 @@ services:
     entrypoint: ["./entrypoint.sh"]
     volumes:
       - ./sA:/app
-    depends_on:
-      - api-gateway
     environment:
       - DJANGO_SETTINGS_MODULE=sA.settings
-      - DATABASE_URL=postgres://service_a_user:service_a_password@postgres-a:5432/service_a_db
+      - DATABASE_URL_DB1=postgres://habrpguser:pgpwd4habr@pg-1:5432/habrdb
+      - DATABASE_URL_DB2=postgres://habrpguser:pgpwd4habr@pg-2:5432/habrdb
+      - DATABASE_URL_DB3=postgres://habrpguser:pgpwd4habr@pg-3:5432/habrdb
       - API_GATEWAY_BASE_URL=http://api-gateway:8080/
       - SERVICE_TYPE=A
       - SD_HOST=service-discovery
       - SD_PORT=50051
       - PORT=8002
       - SLEEP_DURATION_S=10
-      - LOGGING=0
+      - LOGGING=1
       - RUN_MIGRATIONS=false
+      - ROOT_PASSWORD=SambubU
+      - SECRET_KEY=chipichipichapachapa
     ports:
       - "8002:8000"
+    depends_on:
+      - logstash
+      - service-discovery
     networks:
       - pad-network
 
@@ -200,9 +209,8 @@ services:
     volumes:
       - ./sB:/app
     depends_on:
-      - postgres-b
-      - api-gateway
-      - redis-cluster-init-node
+      - logstash
+      - service-discovery
     environment:
       - DJANGO_SETTINGS_MODULE=sB.settings
       - DATABASE_URL=postgres://service_b_user:service_b_password@postgres-b:5432/service_b_db
@@ -211,8 +219,9 @@ services:
       - SD_HOST=service-discovery
       - SD_PORT=50051
       - PORT=8003
-      - LOGGING=0
+      - LOGGING=1
       - RUN_MIGRATIONS=true
+      - ROOT_PASSWORD=SambubU
     ports:
       - "8003:8000"
     networks:
@@ -226,9 +235,8 @@ services:
     volumes:
       - ./sB:/app
     depends_on:
-      - postgres-b
-      - api-gateway
-      - redis-cluster-init-node
+      - logstash
+      - service-discovery
     environment:
       - DJANGO_SETTINGS_MODULE=sB.settings
       - DATABASE_URL=postgres://service_b_user:service_b_password@postgres-b:5432/service_b_db
@@ -237,8 +245,9 @@ services:
       - SD_HOST=service-discovery
       - SD_PORT=50051
       - PORT=8004
-      - LOGGING=0
+      - LOGGING=1
       - RUN_MIGRATIONS=false
+      - ROOT_PASSWORD=SambubU
     ports:
       - "8004:8000"
     networks:
@@ -252,9 +261,8 @@ services:
     volumes:
       - ./sB:/app
     depends_on:
-      - postgres-b
-      - api-gateway
-      - redis-cluster-init-node
+      - logstash
+      - service-discovery
     environment:
       - DJANGO_SETTINGS_MODULE=sB.settings
       - DATABASE_URL=postgres://service_b_user:service_b_password@postgres-b:5432/service_b_db
@@ -263,8 +271,9 @@ services:
       - SD_HOST=service-discovery
       - SD_PORT=50051
       - PORT=8005
-      - LOGGING=0
+      - LOGGING=1
       - RUN_MIGRATIONS=false
+      - ROOT_PASSWORD=SambubU
     ports:
       - "8005:8000"
     networks:
@@ -292,12 +301,13 @@ services:
       - CRTICAL_LOAD_PER_MIN=5
       - MAX_RETRIES=3
       - MAX_REDIRECTS=3
-      - LOGGING=0
+      - LOGGING=1
+      - ROOT_PASS=SambubU
     ports:
       - "8080:8080"
     depends_on:
-      - sm-redis
       - service-discovery
+      - logstash
     networks:
       - pad-network
 
@@ -309,11 +319,12 @@ services:
       - PORT=50051
       - SM_REDIS_URL=redis://sm-redis:6379
       - SERV_REST_PORT=8000
-      - LOGGING=0
+      - LOGGING=1
     ports:
       - "50051:50051"
     depends_on:
       - sm-redis
+      - filebeat
     networks:
       - pad-network
     volumes:
@@ -400,7 +411,7 @@ services:
   redis-cluster-init-node:
     container_name: redis-cluster-init-node
     build:
-      context: ./config/redis_cluster
+      context: ./redis_cluster
       dockerfile: Dockerfile
     depends_on:
       - ud-redis-node-1
@@ -412,71 +423,70 @@ services:
     networks:
       - pad-network
   
-  # elasticsearch:
-  #   image: docker.elastic.co/elasticsearch/elasticsearch:7.14.0
-  #   container_name: elasticsearch
-  #   environment:
-  #     - discovery.type=single-node
-  #     - xpack.security.enabled=false
-  #     - bootstrap.memory_lock=true
-  #     - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-  #   ulimits:
-  #     memlock:
-  #       soft: -1
-  #       hard: -1
-  #   ports:
-  #     - "9200:9200"
-  #     - "9300:9300"
-  #   networks:
-  #     - pad-network
-  #   volumes:
-  #     - elasticsearch-data:/usr/share/elasticsearch/data
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.14.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - pad-network
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
 
-  # logstash:
-  #   image: docker.elastic.co/logstash/logstash:7.14.0
-  #   container_name: logstash
-  #   ports:
-  #     - "5000:5000"
-  #     - "9600:9600"
-  #   networks:
-  #     - pad-network
-  #   volumes:
-  #     - ./config/logstash/pipeline:/usr/share/logstash/pipeline
-  #   depends_on:
-  #     - elasticsearch
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.14.0
+    container_name: logstash
+    ports:
+      - "5000:5000"
+      - "9600:9600"
+    networks:
+      - pad-network
+    volumes:
+      - ./elk_config/logstash/pipeline:/usr/share/logstash/pipeline
+    depends_on:
+      - elasticsearch
 
-  # kibana:
-  #   image: docker.elastic.co/kibana/kibana:7.14.0
-  #   container_name: kibana
-  #   environment:
-  #     - ELASTICSEARCH_URL=http://elasticsearch:9200
-  #   ports:
-  #     - "5601:5601"
-  #   networks:
-  #     - pad-network
-  #   depends_on:
-  #     - elasticsearch
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.14.0
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    networks:
+      - pad-network
+    depends_on:
+      - elasticsearch
 
-  # filebeat:
-  #   image: docker.elastic.co/beats/filebeat:8.15.3
-  #   container_name: filebeat
-  #   command: ["filebeat", "-e", "-strict.perms=false"]
-  #   networks:
-  #     - pad-network
-  #   volumes:
-  #     - ./config/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
-  #     - service-discovery-data:/usr/share/filebeat/data
-  #   depends_on:
-  #     - logstash
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.15.3
+    container_name: filebeat
+    command: ["filebeat", "-e", "-strict.perms=false"]
+    networks:
+      - pad-network
+    volumes:
+      - ./elk_config/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - service-discovery-data:/usr/share/filebeat/data
+    depends_on:
+      - logstash
 
 volumes:
-  patroni1:
-  patroni2:
-  patroni3:
-  # postgres-data-a:
-  postgres-data-b:
-  # elasticsearch-data:
+  elasticsearch-data:
   service-discovery-data:
+  pg_1_data:
+  pg_2_data:
+  pg_3_data:
+  postgres-data-b:
 
 networks:
   pad-network:
