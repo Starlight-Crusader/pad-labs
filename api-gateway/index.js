@@ -189,6 +189,9 @@ async function handleServiceRequest(serviceType, method, endpoint, body, headers
 
     // Try each instance in order of load
     for (const { ip } of instancesWithLoad.slice(0, MAX_REDIRECTS)) {
+        logMsg(`${ip}`);
+        logMsg(`${endpoint}`);
+        
         // Check if instance can handle more tasks
         const currentTasks = await getParam('tasks', ip);
         if (currentTasks >= MAX_TASKS_PER_SERVICE) {
