@@ -158,7 +158,7 @@ services:
       - SD_HOST=service-discovery
       - SD_PORT=50051
       - PORT=8001
-      - SLEEP_DURATION_S=10
+      - SLEEP_DURATION_S=1
       - LOGGING=1
       - RUN_MIGRATIONS=false
       - ROOT_PASSWORD=SambubU
@@ -188,7 +188,7 @@ services:
       - SD_HOST=service-discovery
       - SD_PORT=50051
       - PORT=8002
-      - SLEEP_DURATION_S=10
+      - SLEEP_DURATION_S=1
       - LOGGING=1
       - RUN_MIGRATIONS=false
       - ROOT_PASSWORD=SambubU
@@ -467,6 +467,8 @@ services:
       - pad-network
     depends_on:
       - elasticsearch
+    volumes:
+      - kibana-config:/usr/share/kibana/config
 
   filebeat:
     image: docker.elastic.co/beats/filebeat:8.15.3
@@ -487,6 +489,7 @@ volumes:
   pg_2_data:
   pg_3_data:
   postgres-data-b:
+  kibana-config:
 
 networks:
   pad-network:

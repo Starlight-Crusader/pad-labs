@@ -28,7 +28,7 @@ const LOGGING = parseInt(process.env.LOGGING);
 // Initialize Winston logger
 const logger = winston.createLogger({
     transports: [
-        new winston.transports.Console(),
+        // new winston.transports.Console(),
         new winston.transports.Http({
             host: LOGSTASH_HOST,
             port: LOGSTASH_HTTP_PORT,
@@ -199,6 +199,8 @@ async function handleServiceRequest(serviceType, method, endpoint, body, headers
             logMsg(`ALERT: Instance ${serviceType}:${ip} is currently busy, trying next instance`);
             continue;
         }
+
+        logMsg(`${ip}`); logMsg(`/${endpoint}`);
 
         // Track the task
         await incParam('tasks', ip);

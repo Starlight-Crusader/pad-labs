@@ -17,13 +17,15 @@ class PostgreSQLRouter:
         for _ in range(len(self.replica_list)):
             try:
                 read_db = self.replica_list[self.read_db_index]
-                if self.is_connection_healthy(read_db):
+                if self.is_connection_healthy_no_reconnect(read_db):
                     return read_db
                 else:
                     raise OperationalError(f"Replica {read_db} is unavailable.")
             except OperationalError as e:
                 logger.error(f"Error reading from replica {read_db}: {e}")
                 self.handle_db_failure('replica')
+            except Exception as e:
+                logger.error(f"Error reading from replica {read_db}: {e}")
 
         logger.critical("No replicas are available for reading. Falling back to master.")
         return self.write_db
@@ -34,14 +36,16 @@ class PostgreSQLRouter:
         """
         while True:
             try:
-                if self.is_connection_healthy(self.write_db):
+                if self.is_connection_healthy_no_reconnect(self.write_db):
+                    print(f"Writing to {self.write_db}")
                     return self.write_db
                 else:
                     raise OperationalError(f"Master {self.write_db} is unavailable.")
             except OperationalError as e:
                 logger.error(f"Error writing to master {self.write_db}: {e}")
                 self.handle_db_failure('master')
-                time.sleep(2)  # Retry after a short delay
+            except Exception as e:
+                logger.error(f"Error writing to master {self.write_db}: {e}")
 
     def allow_migrate(self, db, app_label, model_name=None, **hints):
         """
@@ -87,13 +91,18 @@ class PostgreSQLRouter:
         else:
             logger.critical("No replicas left to handle.")
 
-    def is_connection_healthy(self, db_alias):
+    def is_connection_healthy_no_reconnect(self, db_alias):
         """
-        Check if the database connection is healthy.
+        Check if the database connection is healthy without reconnecting.
         """
         try:
             connection = connections[db_alias]
-            connection.ensure_connection()
+            cursor = connection.cursor()
+            cursor.execute("SELECT 1")
+            cursor.close()
+
             return True
         except OperationalError:
+            return False
+        except Exception as e:
             return False
